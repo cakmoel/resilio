@@ -427,6 +427,38 @@ declare -A SCENARIOS=(
 )
 ```
 
+---
+
+## Performance Methodology and Statistical Validity
+
+Resilio is not a basic wrapper for ApacheBench; it is a framework that implements rigorous statistical controls to ensure that performance data is actionable and scientifically sound.
+
+### 1. Tail Latency and Percentiles (P95/P99)
+
+Average response times are often misleading because they mask the "long tail" of user dissatisfaction. Resilio focuses on **P95 and P99 latencies**, which identify the worst-case scenarios caused by resource contention, garbage collection pauses, or network jitter.
+
+### 2. Stability Measurement (CV)
+
+We use the **Coefficient of Variation (CV)** to measure system stability. A low average RPS is acceptable if the CV is low (indicating consistency), but a high RPS with a high CV indicates an unstable system that is likely to fail under unpredictable production spikes.
+
+### 3. Scientific Three-Phase Execution
+
+To adhere to the principles of the **USE Method** (Utilization, Saturation, and Errors), Resilio DLT executes tests in three distinct stages:
+
+* **Warm-up:** Primes the application environment (JIT, connection pools, and caches).
+* **Ramp-up:** Observes the system's "Knee of the Curve" where throughput begins to saturate.
+* **Sustained Load:** Collects the primary data set for statistical analysis.
+
+### 4. Mathematical Foundation
+
+The DLT engine calculates **95% Confidence Intervals** for all Mean RPS values. This ensures that the results are not just a "snapshot" of a lucky run, but a mathematically probable representation of your system's true performance capacity.
+
+> For a deep dive into the mathematical formulas, Z-score calculations, and ISO 25010 compliance details used in this toolkit, please refer to our technical document:
+> **[View the Resilio Performance Methodology Gist](https://www.google.com/search?q=https://gist.github.com/cakmoel/2dbc49121058b3549904a35d33184fe2)**
+
+---
+
+
 ## Best Practices
 
 ### Before Running Tests
