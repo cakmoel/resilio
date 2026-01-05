@@ -22,7 +22,7 @@ Both scripts work by sending HTTP requests to your application endpoints and mea
 
 ## When to Use Each Script
 
-### Use slt.sh (Simple Load Testing) when:
+### Use slt.sh (Resilio SLT) when:
 
 - You need quick performance metrics for your application
 - You want to test specific endpoints with straightforward load patterns
@@ -31,7 +31,7 @@ Both scripts work by sending HTTP requests to your application endpoints and mea
 - You have limited time and need immediate results
 - You want to compare performance between different endpoints
 
-### Use dlt.sh (Deep Load Testing) when:
+### Use dlt.sh (Resilio DLT) when:
 
 - You need comprehensive performance analysis with statistical rigor
 - You require detailed reports with confidence intervals and standard deviations
