@@ -1,0 +1,11 @@
+# --- Ignore test results and logs ---
+load_test_results_/ 
+load_test_reports_/ 
+*.log 
+*.csv 
+*.txt 
+raw_data/ 
+charts/
+
+# --- OS generated files ---
+.DS_Store Thumbs.db
