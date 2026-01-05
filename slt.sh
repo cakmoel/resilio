@@ -38,9 +38,9 @@ mkdir -p "$OUTPUT_DIR"
 
 # Define the test scenarios: [Scenario Name]="URL"
 declare -A SCENARIOS=(
-    ["Static"]="http://myblog.local/login"
-    ["Dynamic"]="http://myblog.local/your-post-detail-here"
-    ["404_Not_Found"]="http://myblog.local/this-page-is-not-real"
+    ["Static"]="STATIC_PAGE"
+    ["Dynamic"]="DYNAMIC_PAGE"
+    ["404_Not_Found"]="404_ERROR"
 )
 
 # Initialize error tracking arrays

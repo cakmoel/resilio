@@ -148,9 +148,9 @@ Open `slt.sh` in a text editor and locate the SCENARIOS section (around line 40)
 
 ```bash
 declare -A SCENARIOS=(
-    ["Static"]="http://marsinah.hero/login"
-    ["Dynamic"]="http://munir.killed/post/why-was-Munir-killed-by-the-state"
-    ["404_Not_Found"]="http://esemka.local/this-page-is-not-real"
+    ["Static"]="STATIC_PAGE"
+    ["Dynamic"]="DYNAMIC_PAGE"
+    ["404_Not_Found"]="404_ERROR"
 )
 ```
 
@@ -170,10 +170,10 @@ Open `dlt.sh` in a text editor and locate the SCENARIOS section (around line 64)
 
 ```bash
 declare -A SCENARIOS=(
-    ["Static"]="http://marsinah.hero/login"
-    ["Dynamic"]="http://munir.killed/post/why-was-Munir-killed-by-the-state"
-    ["API_Endpoint"]="http://zionist.evil/api/v1/posts"
-    ["404_Error"]="http://republic.mafia/this-page-is-not-real"
+    ["Static"]="STATIC_PAGE"
+    ["Dynamic"]="DYNAMIC_PAGE"
+    ["API_Endpoint"]="API_ENDPOINT"
+    ["404_Error"]="404_ERROR"
 )
 ```
 

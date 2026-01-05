@@ -88,10 +88,10 @@ TEST_TIMEOUT=30           # Standard timeout per IETF best practices
 
 # Test scenarios with different user behaviors
 declare -A SCENARIOS=(
-    ["Static"]="STATIC_PAGE" # example: your login page  
-    ["Dynamic"]="DYNAMIC_PAGE" # example: product page, detail product, etc.
-    ["API_Endpoint"]="http://myblog.local/api/v1/posts" # example: API endpoint
-    ["404_Error"]="http://myblog.local/this-page-is-not-real" # example: 404 error simulation
+    ["Static"]="STATIC_PAGE" 
+    ["Dynamic"]="DYNAMIC_PAGE" 
+    ["API_Endpoint"]="API_ENDPOINT" 
+    ["404_Error"]="404_ERROR" 
 )
 
 # --- Research-Based Setup ---
