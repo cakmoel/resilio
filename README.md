@@ -1,8 +1,22 @@
-# Load Testing Scripts User Guide
+# Resilio
+
+High-Performance Load Testing Suite for Web Durability and Speed
+
+Resilio is a professional-grade performance engineering toolkit designed for Senior QA Engineers and DevOps practitioners. It provides a structured, technology-agnostic methodology to measure the speed, endurance, and scalability of web applications and APIs.
+
+By leveraging the reliability of ApacheBench and adding layers of statistical analysis and automated reporting, Resilio transforms raw network data into high-fidelity performance intelligence.
 
 ## Introduction
 
-This guide provides instructions for using two custom load testing scripts: `slt.sh` (Simple Load Testing) and `dlt.sh` (Deep Load Testing). These scripts are designed to help you measure and analyze the performance of web applications and APIs built with any technology stack including PHP, JavaScript (Node.js), Go, Python, Ruby, Java, or any other web technology.
+### Core Engines
+
+Resilio SLT (Simple Load Testing) The `slt.sh` engine is optimized for agile development cycles. It provides rapid feedback on endpoint performance, making it ideal for smoke testing, initial benchmarks, and CI/CD integration.
+
+Resilio DLT (Deep Load Testing) The `dlt.sh` engine is a research-based powerhouse designed for rigorous statistical analysis and endurance testing. It follows industry standards (ISO 25010) and academic frameworks (Jain, 1991) to provide 95 percent confidence intervals, ramp-up phases, and sustained load modeling.
+
+### Guidance
+
+This guide provides instructions for using two custom load testing scripts: `slt.sh` (Resilio SLT) and `dlt.sh` (Resilio DLT). These scripts are designed to help you measure and analyze the performance of web applications and APIs built with any technology stack including PHP, JavaScript (Node.js), Go, Python, Ruby, Java, or any other web technology.
 
 Both scripts work by sending HTTP requests to your application endpoints and measuring the responses. They are technology-agnostic because they test your application through its HTTP interface, not its internal code.
 
@@ -599,6 +613,18 @@ declare -A SCENARIOS=(
 
 Run the same test parameters against each and compare the results to see which implementation performs best for your use case.
 
+## Best Practices for Senior QA
+
+1. Establish Baselines: Always run a Simple test on a stable environment to establish a golden baseline before testing new  code changes.
+
+2. Control Variables: Ensure the testing machine and the target server are on a consistent network to prevent external latency from skewing data.
+
+3. Monitor Percentiles: Focus on P95 and P99 metrics for SLA validation rather than simple averages.
+
+4. Warm Up Your Application: Use dlt.sh to ensure the application is initialized completely before recording final metrics.
+
+5. Monitor System Resources: Watch CPU, memory, and disk usage on the server side during Sustained Load phases.
+
 ## Conclusion
 
 These load testing scripts provide powerful tools for measuring web application performance regardless of the underlying technology. Start with slt.sh for quick checks, and use dlt.sh for comprehensive analysis and formal reporting.
@@ -606,3 +632,8 @@ These load testing scripts provide powerful tools for measuring web application 
 Remember that load testing is an iterative process. Run tests regularly, compare results over time, and use the insights to optimize your application's performance.
 
 The beauty of HTTP-based testing is that you can test any web application or API regardless of how it's built, making these scripts valuable tools for any web developer or DevOps engineer.
+
+## License
+This project is licensed under the MIT License. Copyright (c) 2025 M.Noermoehammad.
+
+Resilio: Built for Speed, Tested for Durability.

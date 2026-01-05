@@ -1,14 +1,10 @@
-Security Policy
-Supported Versions
-Only the latest version of the scripts in the main branch is supported for security updates.
+# Security Policy
 
-Reporting a Vulnerability
-If you discover a security vulnerability within these scripts, please do not open a public issue. Instead, report it privately.
+## Reporting Vulnerabilities 
+Security is a critical component of performance testing, especially when dealing with sensitive production endpoints. If you discover a security vulnerability, please do not use the public issue tracker.
 
-To report a vulnerability:
+## Reporting Process 
+Please email the maintainer directly. Provide a summary of the vulnerability, the potential impact, and a proof of concept. We aim to acknowledge all reports within 24 to 48 hours and will work with you to provide a fix before public disclosure.
 
-Send an email to the project maintainer (M.Noermoehammad).
-
-Include a detailed description of the vulnerability and a proof of concept if possible.
-
-You should receive an acknowledgment of your report within 48 hours. We will coordinate the fix and disclosure with you.
+## Scope 
+This policy covers all scripts (slt.sh and dlt.sh) and the handling of headers, cookies, and URL data within this repository.

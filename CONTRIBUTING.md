@@ -1,26 +1,17 @@
-How to Contribute
-We welcome contributions from the community. As a Senior QA Engineer, I ensure that all contributions maintain the statistical integrity and reliability of the testing suite.
+# Contribution Guidelines
 
-Reporting Bugs
-If you find a bug, please open an issue in the GitHub repository. Provide a clear description of the problem, steps to reproduce it, and the environment where it occurred.
+We are excited that you want to contribute to the Resilio. To maintain the integrity of our performance metrics and the reliability of our scripts, please follow these guidelines.
 
-Suggesting Enhancements
-Feature requests are welcome. Please explain why the feature is needed and how it would benefit the performance testing workflow.
+Code Quality Standards As this is a performance tool, code efficiency is paramount. All shell scripts must be compatible with POSIX standards where possible or explicitly documented if requiring Bash-specific features. Ensure your code is linted using ShellCheck.
 
-Pull Request Process
-Fork the repository and create your branch from main.
+Statistical Integrity If you are modifying the mathematical logic in dlt.sh (such as confidence intervals or percentile calculations), you must provide a reference to the academic paper or industry standard justifying the change.
 
-If you have added code that should be tested, add tests.
+## Process
 
-Ensure the script follows shell scripting best practices (e.g., use shellcheck).
+Fork the repository.
 
-Update the documentation (README.md) if you change user-facing functionality.
+Create a branch for your feature or bug fix.
 
-Submit your pull request with a detailed description of the changes.
+Submit a Pull Request with a clear explanation of how the change affects test accuracy or speed.
 
-Coding Standards
-Use set -euo pipefail for robust error handling.
-
-Maintain English locale settings for consistent number formatting.
-
-Add comments for complex logic, especially for statistical calculations.
+Ensure the README.md is updated if new flags or environment variables are introduced.
