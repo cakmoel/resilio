@@ -2,7 +2,7 @@
 
 High-Performance Load Testing Suite for Web Durability and Speed
 
-Resilio is a professional-grade performance engineering toolkit designed for Senior QA Engineers and DevOps practitioners. It provides a structured, technology-agnostic methodology to measure the speed, endurance, and scalability of web applications and APIs.
+Resilio is a professional-grade performance engineering toolkit designed for QA Engineers, Developers and DevOps practitioners. It provides a structured, technology-agnostic methodology to measure the speed, endurance, and scalability of web applications and APIs.
 
 By leveraging the reliability of ApacheBench and adding layers of statistical analysis and automated reporting, Resilio transforms raw network data into high-fidelity performance intelligence.
 
