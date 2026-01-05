@@ -454,7 +454,7 @@ To adhere to the principles of the **USE Method** (Utilization, Saturation, and 
 The DLT engine calculates **95% Confidence Intervals** for all Mean RPS values. This ensures that the results are not just a "snapshot" of a lucky run, but a mathematically probable representation of your system's true performance capacity.
 
 > For a deep dive into the mathematical formulas, Z-score calculations, and ISO 25010 compliance details used in this toolkit, please refer to our technical document:
-> **[View the Resilio Performance Methodology Gist](https://www.google.com/search?q=https://gist.github.com/cakmoel/2dbc49121058b3549904a35d33184fe2)**
+> **[View the Resilio Performance Methodology Gist](https://gist.github.com/cakmoel/2dbc49121058b3549904a35d33184fe2)**
 
 ---
 
