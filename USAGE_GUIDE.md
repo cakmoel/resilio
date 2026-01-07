@@ -2585,8 +2585,8 @@ kill $(cat dlt.pid)
 
 **Effect Size (Cohen's d):**
 
-| |d| Range | Effect Size | Practical Meaning | Recommendation |
-|-----------|-------------|-------------------|----------------|
+| \|d\| Range | Effect Size | Practical Meaning | Recommendation |
+|-------------|-------------|-------------------|----------------|
 | < 0.2 | Negligible | Not worth effort | Document but don't act |
 | 0.2 - 0.5 | Small | Minor improvement | Consider other factors |
 | 0.5 - 0.8 | Medium | Meaningful change | Likely worth deploying |
