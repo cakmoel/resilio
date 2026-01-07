@@ -15,6 +15,7 @@
 7. [Advanced Configuration](#advanced-configuration)
 8. [Troubleshooting](#troubleshooting)
 9. [Best Practices](#best-practices)
+10. [Appendix: Quick Reference](#appendix-quick-reference)
 
 ---
 
