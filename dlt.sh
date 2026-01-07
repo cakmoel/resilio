@@ -12,11 +12,17 @@
 # - GNU coreutils (bc, sort, uniq)
 # - Optional: Git for version control of baselines
 #
-# 
 # File: dlt.sh
 # Author: M.Noermoehammad
 # License: MIT License
-# Version: 6.0 - Priority 1 Implementation
+# Version: 6.1
+#
+# CHANGELOG v6.1:
+# - Added Mann-Whitney U test (non-parametric alternative)
+# - Automatic statistical test selection (parametric vs non-parametric)
+# - Normality checking using skewness and kurtosis
+# - Rank-biserial correlation for Mann-Whitney effect size
+# - Enhanced reporting with test rationale
 #
 # CHANGELOG v6.0:
 # - Smart locale auto-detection (respects system configuration)
@@ -41,8 +47,6 @@
 #
 # You can see the research references in REFERENCES.md
 # =============================================================================
-
-
 
 set -euo pipefail
 
@@ -284,7 +288,7 @@ load_baseline_data() {
 }
 
 # =============================================================================
-# STATISTICAL HYPOTHESIS TESTING - Welch's t-test
+# STATISTICAL FOUNDATIONS - Shared Functions
 # =============================================================================
 
 calculate_mean() {
@@ -324,6 +328,64 @@ calculate_variance() {
     echo "scale=6; $sum_sq / ($count - 1)" | bc -l
 }
 
+# =============================================================================
+# NORMALITY TESTING - New in v6.1
+# =============================================================================
+
+check_normality() {
+    local -n data_array="$1"
+    local n=${#data_array[@]}
+    
+    if [[ $n -lt 20 ]]; then
+        # Too small for reliable normality test
+        echo "insufficient_data"
+        return 1
+    fi
+    
+    # Calculate mean and standard deviation
+    local mean=$(calculate_mean data_array)
+    local variance=$(calculate_variance data_array "$mean")
+    local sd=$(echo "scale=6; sqrt($variance)" | bc -l)
+    
+    if (( $(echo "$sd == 0" | bc -l) )); then
+        echo "zero_variance"
+        return 1
+    fi
+    
+    # Calculate skewness: E[(X-μ)³]/σ³
+    local m3=0
+    for val in "${data_array[@]}"; do
+        local z=$(echo "scale=6; ($val - $mean) / $sd" | bc -l)
+        local z3=$(echo "scale=6; $z * $z * $z" | bc -l)
+        m3=$(echo "scale=6; $m3 + $z3" | bc -l)
+    done
+    local skewness=$(echo "scale=4; $m3 / $n" | bc -l)
+    local skew_abs=$(echo "scale=4; sqrt($skewness * $skewness)" | bc -l)
+    
+    # Calculate kurtosis: E[(X-μ)⁴]/σ⁴ - 3
+    local m4=0
+    for val in "${data_array[@]}"; do
+        local z=$(echo "scale=6; ($val - $mean) / $sd" | bc -l)
+        local z4=$(echo "scale=6; $z * $z * $z * $z" | bc -l)
+        m4=$(echo "scale=6; $m4 + $z4" | bc -l)
+    done
+    local kurtosis=$(echo "scale=4; ($m4 / $n) - 3" | bc -l)
+    local kurt_abs=$(echo "scale=4; sqrt($kurtosis * $kurtosis)" | bc -l)
+    
+    # Decision criteria (D'Agostino, 1971)
+    if (( $(echo "$skew_abs > 1.0" | bc -l) )) || (( $(echo "$kurt_abs > 2.0" | bc -l) )); then
+        echo "non_normal|skew=$skewness|kurt=$kurtosis"
+        return 1
+    else
+        echo "approximately_normal|skew=$skewness|kurt=$kurtosis"
+        return 0
+    fi
+}
+
+# =============================================================================
+# PARAMETRIC TEST - Welch's t-test (from v6.0)
+# =============================================================================
+
 welchs_t_test() {
     local -n baseline_array="$1"
     local -n candidate_array="$2"
@@ -345,7 +407,6 @@ welchs_t_test() {
     local var2=$(calculate_variance candidate_array "$mean2")
     
     # Welch's t-statistic
-    # t = (mean1 - mean2) / sqrt(var1/n1 + var2/n2)
     local se=$(echo "scale=6; sqrt(($var1 / $n1) + ($var2 / $n2))" | bc -l)
     
     if (( $(echo "$se == 0" | bc -l) )); then
@@ -356,18 +417,16 @@ welchs_t_test() {
     local t_stat=$(echo "scale=6; ($mean1 - $mean2) / $se" | bc -l)
     
     # Welch-Satterthwaite degrees of freedom
-    # df = (var1/n1 + var2/n2)^2 / ((var1/n1)^2/(n1-1) + (var2/n2)^2/(n2-1))
     local s1=$(echo "scale=6; $var1 / $n1" | bc -l)
     local s2=$(echo "scale=6; $var2 / $n2" | bc -l)
     local numerator=$(echo "scale=6; ($s1 + $s2) * ($s1 + $s2)" | bc -l)
     local denom=$(echo "scale=6; (($s1 * $s1) / ($n1 - 1)) + (($s2 * $s2) / ($n2 - 1))" | bc -l)
     
-    local df=30  # Conservative approximation for large samples
+    local df=30
     if (( $(echo "$denom > 0" | bc -l) )); then
         df=$(echo "scale=0; $numerator / $denom" | bc -l)
     fi
     
-    # Approximate p-value using t-distribution
     local p_value=$(t_to_pvalue "$t_stat" "$df")
     
     echo "$t_stat|$p_value|$df|success"
@@ -376,29 +435,21 @@ welchs_t_test() {
 t_to_pvalue() {
     local t="$1"
     local df="$2"
-    
-    # Absolute value of t
     local t_abs=$(echo "scale=6; sqrt($t * $t)" | bc -l)
     
-    # For large df (>30), use normal approximation
     if (( $(echo "$df > 30" | bc -l) )); then
-        # Two-tailed p-value approximation
-        # P(|Z| > |t|) ≈ 2 * Φ(-|t|)
-        # Using rough normal CDF approximation
-        
         if (( $(echo "$t_abs > 3.5" | bc -l) )); then
-            echo "0.001"  # Very significant
+            echo "0.001"
         elif (( $(echo "$t_abs > 2.576" | bc -l) )); then
-            echo "0.01"   # p < 0.01
+            echo "0.01"
         elif (( $(echo "$t_abs > 1.96" | bc -l) )); then
-            echo "0.05"   # p < 0.05
+            echo "0.05"
         elif (( $(echo "$t_abs > 1.645" | bc -l) )); then
-            echo "0.10"   # p < 0.10
+            echo "0.10"
         else
-            echo "0.20"   # Not significant
+            echo "0.20"
         fi
     else
-        # Small sample - use t-table approximation
         if (( $(echo "$t_abs > 3.0" | bc -l) )); then
             echo "0.01"
         elif (( $(echo "$t_abs > 2.0" | bc -l) )); then
@@ -410,9 +461,188 @@ t_to_pvalue() {
 }
 
 # =============================================================================
-# EFFECT SIZE - Cohen's d
+# NON-PARAMETRIC TEST - Mann-Whitney U (New in v6.1)
 # =============================================================================
 
+mann_whitney_u_test() {
+    local -n baseline_array="$1"
+    local -n candidate_array="$2"
+    
+    local n1=${#baseline_array[@]}
+    local n2=${#candidate_array[@]}
+    
+    if [[ $n1 -lt 3 ]] || [[ $n2 -lt 3 ]]; then
+        echo "0|0|0|insufficient_data"
+        return 1
+    fi
+    
+    # Combine arrays with labels
+    declare -a combined_values
+    declare -a combined_labels
+    
+    for val in "${baseline_array[@]}"; do
+        combined_values+=("$val")
+        combined_labels+=("baseline")
+    done
+    
+    for val in "${candidate_array[@]}"; do
+        combined_values+=("$val")
+        combined_labels+=("candidate")
+    done
+    
+    # Sort with index tracking (bubble sort)
+    local n_combined=${#combined_values[@]}
+    declare -a sorted_indices
+    
+    for (( i=0; i<n_combined; i++ )); do
+        sorted_indices[i]=$i
+    done
+    
+    for (( i=0; i<n_combined-1; i++ )); do
+        for (( j=0; j<n_combined-i-1; j++ )); do
+            local idx1=${sorted_indices[j]}
+            local idx2=${sorted_indices[j+1]}
+            local val1=${combined_values[$idx1]}
+            local val2=${combined_values[$idx2]}
+            
+            if (( $(echo "$val1 > $val2" | bc -l) )); then
+                local temp=${sorted_indices[j]}
+                sorted_indices[j]=${sorted_indices[j+1]}
+                sorted_indices[j+1]=$temp
+            fi
+        done
+    done
+    
+    # Assign ranks (handle ties)
+    declare -a ranks
+    for (( i=0; i<n_combined; i++ )); do
+        ranks[i]=0
+    done
+    
+    local current_rank=1
+    for (( i=0; i<n_combined; i++ )); do
+        local idx=${sorted_indices[i]}
+        
+        # Check for ties
+        local tie_count=1
+        local tie_sum=$current_rank
+        
+        while (( i + tie_count < n_combined )); do
+            local next_idx=${sorted_indices[i+tie_count]}
+            if (( $(echo "${combined_values[$idx]} == ${combined_values[$next_idx]}" | bc -l) )); then
+                tie_sum=$(echo "$tie_sum + $current_rank + $tie_count" | bc -l)
+                ((tie_count++))
+            else
+                break
+            fi
+        done
+        
+        # Assign average rank
+        local avg_rank=$(echo "scale=2; $tie_sum / $tie_count" | bc -l)
+        for (( t=0; t<tie_count; t++ )); do
+            local tied_idx=${sorted_indices[i+t]}
+            ranks[$tied_idx]=$avg_rank
+        done
+        
+        current_rank=$(echo "$current_rank + $tie_count" | bc -l)
+        i=$(echo "$i + $tie_count - 1" | bc -l)
+    done
+    
+    # Calculate sum of ranks for baseline
+    local R1=0
+    for (( i=0; i<n1; i++ )); do
+        R1=$(echo "$R1 + ${ranks[i]}" | bc -l)
+    done
+    
+    # Calculate U statistics
+    local U1=$(echo "scale=6; $R1 - ($n1 * ($n1 + 1) / 2)" | bc -l)
+    local U2=$(echo "scale=6; ($n1 * $n2) - $U1" | bc -l)
+    
+    local U_stat=$U1
+    if (( $(echo "$U2 < $U1" | bc -l) )); then
+        U_stat=$U2
+    fi
+    
+    # Calculate z-score (large sample approximation)
+    local mu_U=$(echo "scale=6; ($n1 * $n2) / 2" | bc -l)
+    local sigma_U=$(echo "scale=6; sqrt(($n1 * $n2 * ($n1 + $n2 + 1)) / 12)" | bc -l)
+    
+    if (( $(echo "$sigma_U == 0" | bc -l) )); then
+        echo "0|0|0|zero_variance"
+        return 1
+    fi
+    
+    # Continuity correction
+    local U_corrected=$U_stat
+    if (( $(echo "$U_stat < $mu_U" | bc -l) )); then
+        U_corrected=$(echo "$U_stat + 0.5" | bc -l)
+    else
+        U_corrected=$(echo "$U_stat - 0.5" | bc -l)
+    fi
+    
+    local z_score=$(echo "scale=6; ($U_corrected - $mu_U) / $sigma_U" | bc -l)
+    local p_value=$(z_to_pvalue "$z_score")
+    
+    echo "$U_stat|$z_score|$p_value|success"
+}
+
+z_to_pvalue() {
+    local z="$1"
+    local z_abs=$(echo "scale=6; sqrt($z * $z)" | bc -l)
+    
+    if (( $(echo "$z_abs > 3.291" | bc -l) )); then
+        echo "0.001"
+    elif (( $(echo "$z_abs > 2.576" | bc -l) )); then
+        echo "0.01"
+    elif (( $(echo "$z_abs > 1.96" | bc -l) )); then
+        echo "0.05"
+    elif (( $(echo "$z_abs > 1.645" | bc -l) )); then
+        echo "0.10"
+    elif (( $(echo "$z_abs > 1.28" | bc -l) )); then
+        echo "0.20"
+    else
+        echo "0.50"
+    fi
+}
+
+# =============================================================================
+# AUTOMATIC TEST SELECTION - New in v6.1
+# =============================================================================
+
+select_and_run_test() {
+    local -n baseline_ref="$1"
+    local -n candidate_ref="$2"
+    
+    # Check normality
+    local baseline_normality=$(check_normality baseline_ref)
+    local candidate_normality=$(check_normality candidate_ref)
+    
+    local baseline_is_normal=false
+    local candidate_is_normal=false
+    
+    if [[ "$baseline_normality" == approximately_normal* ]]; then
+        baseline_is_normal=true
+    fi
+    
+    if [[ "$candidate_normality" == approximately_normal* ]]; then
+        candidate_is_normal=true
+    fi
+    
+    # Decision: Both normal → Welch's t-test, otherwise → Mann-Whitney U
+    if [[ "$baseline_is_normal" == true ]] && [[ "$candidate_is_normal" == true ]]; then
+        local result=$(welchs_t_test baseline_ref candidate_ref)
+        echo "welch|$result|$baseline_normality|$candidate_normality"
+    else
+        local result=$(mann_whitney_u_test baseline_ref candidate_ref)
+        echo "mann_whitney|$result|$baseline_normality|$candidate_normality"
+    fi
+}
+
+# =============================================================================
+# EFFECT SIZE CALCULATIONS
+# =============================================================================
+
+# Cohen's d (parametric)
 calculate_cohens_d() {
     local mean1="$1"
     local mean2="$2"
@@ -421,7 +651,6 @@ calculate_cohens_d() {
     local n1="$5"
     local n2="$6"
     
-    # Pooled standard deviation
     local var1=$(echo "$sd1 * $sd1" | bc -l)
     local var2=$(echo "$sd2 * $sd2" | bc -l)
     
@@ -433,20 +662,30 @@ calculate_cohens_d() {
         return
     fi
     
-    # Cohen's d
     local d=$(echo "scale=4; ($mean1 - $mean2) / $pooled_sd" | bc -l)
     echo "$d"
 }
 
-interpret_cohens_d() {
-    local d="$1"
-    local d_abs=$(echo "scale=4; sqrt($d * $d)" | bc -l)
+# Rank-biserial correlation (non-parametric)
+calculate_rank_biserial() {
+    local U="$1"
+    local n1="$2"
+    local n2="$3"
     
-    if (( $(echo "$d_abs < 0.2" | bc -l) )); then
+    local r=$(echo "scale=4; 1 - ((2 * $U) / ($n1 * $n2))" | bc -l)
+    echo "$r"
+}
+
+# Unified interpretation
+interpret_effect_size() {
+    local effect="$1"
+    local effect_abs=$(echo "scale=4; sqrt($effect * $effect)" | bc -l)
+    
+    if (( $(echo "$effect_abs < 0.2" | bc -l) )); then
         echo "negligible"
-    elif (( $(echo "$d_abs < 0.5" | bc -l) )); then
+    elif (( $(echo "$effect_abs < 0.5" | bc -l) )); then
         echo "small"
-    elif (( $(echo "$d_abs < 0.8" | bc -l) )); then
+    elif (( $(echo "$effect_abs < 0.8" | bc -l) )); then
         echo "medium"
     else
         echo "large"
@@ -454,7 +693,7 @@ interpret_cohens_d() {
 }
 
 # =============================================================================
-# APACHEBENCH PARSER (Keep original implementation)
+# APACHEBENCH PARSER
 # =============================================================================
 
 parse_ab_output() {
@@ -496,7 +735,7 @@ parse_ab_output() {
 }
 
 # =============================================================================
-# TEST EXECUTION (Keep original implementation)
+# TEST EXECUTION
 # =============================================================================
 
 run_research_test() {
@@ -519,7 +758,7 @@ run_research_test() {
 }
 
 # =============================================================================
-# STATISTICAL CALCULATIONS (Keep original calculate_statistics)
+# STATISTICAL CALCULATIONS
 # =============================================================================
 
 calculate_statistics() {
@@ -580,7 +819,7 @@ calculate_statistics() {
 
 main() {
     echo "========================================="
-    echo "RESEARCH-BASED LOAD TESTING v6.0"
+    echo "RESEARCH-BASED LOAD TESTING v6.1"
     echo "Environment: ${APP_ENV^^}"
     echo "Baseline Mode: $([ "$USE_GIT_TRACKING" = true ] && echo 'Git-Tracked (Production)' || echo 'Local Development')"
     echo "========================================="
@@ -671,7 +910,7 @@ main() {
     END_TIME=$(date +%s)
     DURATION=$((END_TIME - START_TIME))
     
-    # Generate reports with hypothesis testing
+    # Generate reports
     generate_research_report_with_hypothesis_testing
     
     # Save baselines
@@ -692,28 +931,31 @@ main() {
 }
 
 # =============================================================================
-# ENHANCED REPORT GENERATION WITH HYPOTHESIS TESTING
+# REPORT GENERATION
 # =============================================================================
 
 generate_research_report_with_hypothesis_testing() {
     echo ""
     echo "GENERATING ENHANCED RESEARCH REPORT..."
     
-    # Standard report (keep original)
     generate_standard_report
-    
-    # NEW: Hypothesis testing report
     generate_hypothesis_testing_report
 }
 
 generate_standard_report() {
     cat > "$REPORT_FILE" << 'EOF'
-# Research-Based Load Testing Report v6.0
+# Research-Based Load Testing Report v6.1
 
-## Enhancements in v6.0
+## What's New in v6.1
+-  **Mann-Whitney U test** - Non-parametric alternative for skewed data
+-  **Automatic test selection** - Parametric vs non-parametric based on data
+-  **Normality checking** - Skewness and kurtosis analysis
+-  **Enhanced effect sizes** - Rank-biserial correlation for Mann-Whitney U
+
+## Enhancements from v6.0
 - Smart locale auto-detection
 - Hybrid baseline management (Git-integrated)
-- Welch's t-test for statistical hypothesis testing
+- Welch's t-test for normally distributed data
 - Cohen's d effect size calculation
 - Automated regression detection
 
@@ -747,9 +989,14 @@ EOF
 
 generate_hypothesis_testing_report() {
     cat > "$COMPARISON_REPORT" << 'EOF'
-# Statistical Hypothesis Testing Report
+# Statistical Hypothesis Testing Report v6.1
 
-## Methodology: Welch's t-test (Welch, 1947)
+## Methodology: Automatic Test Selection
+
+This version automatically selects the most appropriate statistical test:
+
+- **Welch's t-test** (parametric) - When data is approximately normal
+- **Mann-Whitney U test** (non-parametric) - When data is skewed or has outliers
 
 **Null Hypothesis (H₀)**: No significant difference between baseline and current test  
 **Alternative Hypothesis (H₁)**: Significant difference exists  
@@ -760,7 +1007,6 @@ generate_hypothesis_testing_report() {
 EOF
 
     for scenario in "${!SCENARIOS[@]}"; do
-        # Try to load baseline
         baseline_file=$(load_latest_baseline "$scenario")
         
         if [[ -z "$baseline_file" ]]; then
@@ -772,7 +1018,6 @@ EOF
             continue
         fi
         
-        # Load baseline RPS data
         baseline_rps=$(load_baseline_data "$baseline_file" 2)
         
         if [[ -z "$baseline_rps" ]]; then
@@ -788,8 +1033,9 @@ EOF
         read -ra baseline_array <<< "$baseline_rps"
         read -ra candidate_array <<< "${RPS_VALUES[$scenario]}"
         
-        # Perform Welch's t-test
-        IFS='|' read -r t_stat p_value df status <<< "$(welchs_t_test baseline_array candidate_array)"
+        # NEW: Automatic test selection
+        IFS='|' read -r test_used statistic score p_value status base_norm cand_norm <<< \
+            "$(select_and_run_test baseline_array candidate_array)"
         
         if [[ "$status" != "success" ]]; then
             cat >> "$COMPARISON_REPORT" << EOF
@@ -803,21 +1049,29 @@ EOF
         # Calculate statistics
         baseline_mean=$(calculate_mean baseline_array)
         candidate_mean=$(calculate_mean candidate_array)
-        
-        baseline_var=$(calculate_variance baseline_array "$baseline_mean")
-        candidate_var=$(calculate_variance candidate_array "$candidate_mean")
-        
-        baseline_sd=$(echo "scale=3; sqrt($baseline_var)" | bc -l)
-        candidate_sd=$(echo "scale=3; sqrt($candidate_var)" | bc -l)
-        
-        # Cohen's d
-        cohens_d=$(calculate_cohens_d "$baseline_mean" "$candidate_mean" "$baseline_sd" "$candidate_sd" "${#baseline_array[@]}" "${#candidate_array[@]}")
-        effect_interpretation=$(interpret_cohens_d "$cohens_d")
-        
-        # Percent change
         pct_change=$(echo "scale=2; (($candidate_mean - $baseline_mean) / $baseline_mean) * 100" | bc -l)
         
-        # Determine significance
+        # Calculate appropriate effect size
+        local effect_size=""
+        local effect_metric=""
+        
+        if [[ "$test_used" == "welch" ]]; then
+            baseline_var=$(calculate_variance baseline_array "$baseline_mean")
+            candidate_var=$(calculate_variance candidate_array "$candidate_mean")
+            baseline_sd=$(echo "scale=3; sqrt($baseline_var)" | bc -l)
+            candidate_sd=$(echo "scale=3; sqrt($candidate_var)" | bc -l)
+            
+            effect_size=$(calculate_cohens_d "$baseline_mean" "$candidate_mean" \
+                         "$baseline_sd" "$candidate_sd" "${#baseline_array[@]}" "${#candidate_array[@]}")
+            effect_metric="Cohen's d"
+        else
+            effect_size=$(calculate_rank_biserial "$statistic" "${#baseline_array[@]}" "${#candidate_array[@]}")
+            effect_metric="Rank-biserial r"
+        fi
+        
+        effect_interpretation=$(interpret_effect_size "$effect_size")
+        
+        # Determine verdict
         if (( $(echo "$p_value < 0.05" | bc -l) )); then
             if (( $(echo "$candidate_mean > $baseline_mean" | bc -l) )); then
                 verdict="SIGNIFICANT IMPROVEMENT"
@@ -838,18 +1092,42 @@ EOF
 
 #### Statistical Test Results
 
+**Test Used**: $([ "$test_used" = "welch" ] && echo "**Welch's t-test** (parametric)" || echo "**Mann-Whitney U test** (non-parametric)")  
+**Reason**: $([ "$test_used" = "welch" ] && echo "Both samples approximately normal" || echo "Non-normal distribution detected")
+
 | Metric | Value | Interpretation |
 |--------|-------|----------------|
-| **t-statistic** | $t_stat | - |
-| **p-value** | $p_value | $([ $(echo "$p_value < 0.05" | bc -l) -eq 1 ] && echo "Statistically significant (p < 0.05)" || echo "Not significant (p ≥ 0.05)") |
-| **Degrees of Freedom** | $df | Welch-Satterthwaite |
-| **Cohen's d** | $cohens_d | Effect size: $effect_interpretation |
+| **Test Statistic** | $statistic | $([ "$test_used" = "welch" ] && echo "t-value" || echo "U-value") |
+| **p-value** | $p_value | $([ $(echo "$p_value < 0.05" | bc -l) -eq 1 ] && echo "Statistically significant ★" || echo "Not significant") |
+| **Effect Size** | $effect_size | $effect_metric |
+| **Effect Magnitude** | $effect_interpretation | - |
 | **Verdict** | $verdict | - |
 
-#### Interpretation (Jain, 1991 & Cohen, 1988)
+#### Distribution Characteristics
+
+- **Baseline**: $base_norm
+- **Candidate**: $cand_norm
+
+#### Interpretation
 
 EOF
 
+        if [[ "$test_used" == "welch" ]]; then
+            cat >> "$COMPARISON_REPORT" << EOF
+**Welch's t-test** was used because both samples showed approximately normal distributions.
+This parametric test is more powerful (better at detecting true differences) when normality 
+assumptions are met.
+
+EOF
+        else
+            cat >> "$COMPARISON_REPORT" << EOF
+**Mann-Whitney U test** was used because at least one sample showed non-normal distribution 
+(high skewness or kurtosis). This non-parametric test is more robust to outliers and skewed 
+data, making it ideal for real-world performance metrics which often have long tails (P95/P99).
+
+EOF
+        fi
+        
         if (( $(echo "$p_value < 0.01" | bc -l) )); then
             echo "- **Very strong evidence** against H₀ (99% confidence)" >> "$COMPARISON_REPORT"
         elif (( $(echo "$p_value < 0.05" | bc -l) )); then
@@ -858,7 +1136,7 @@ EOF
             echo "- **Insufficient evidence** to reject H₀" >> "$COMPARISON_REPORT"
         fi
         
-        echo "- Effect size is **$effect_interpretation** (Cohen's d = $cohens_d)" >> "$COMPARISON_REPORT"
+        echo "- Effect size is **$effect_interpretation** ($effect_metric = $effect_size)" >> "$COMPARISON_REPORT"
         
         if [[ "$effect_interpretation" == "negligible" ]] || [[ "$effect_interpretation" == "small" ]]; then
             echo "- **Practical significance**: Change is statistically detectable but may not be practically important" >> "$COMPARISON_REPORT"
@@ -875,11 +1153,14 @@ EOF
 
 ## Research References
 
-1. **Welch, B. L. (1947)**. "The generalization of Student's problem when several different population variances are involved." *Biometrika*, 34(1-2), 28-35.
+See REFERENCES.md for complete citations.
 
-2. **Cohen, J. (1988)**. *Statistical Power Analysis for the Behavioral Sciences* (2nd ed.). Lawrence Erlbaum Associates.
-
-3. **Jain, R. (1991)**. *The Art of Computer Systems Performance Analysis*. Wiley.
+**Key Methods:**
+1. Welch's t-test - Welch (1947)
+2. Mann-Whitney U test - Mann & Whitney (1947)
+3. Normality testing - D'Agostino (1971)
+4. Cohen's d - Cohen (1988)
+5. Rank-biserial correlation - Kerby (2014)
 
 ---
 
@@ -899,4 +1180,5 @@ EOF
 trap 'echo "Test interrupted"; kill $MONITOR_PID 2>/dev/null || true; exit 1' INT TERM
 
 main "$@"
+
 
