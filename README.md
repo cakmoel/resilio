@@ -492,8 +492,8 @@ Copyright © 2025 M.Noermoehammad
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/resilio/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/resilio/discussions)
+- **Issues**: [GitHub Issues](https://github.com/cakmoel/resilio/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cakmoel/resilio/discussions)
 - **Email**: your.email@example.com
 
 ---
