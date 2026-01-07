@@ -1,671 +1,501 @@
 # Resilio
 
-High-Performance Load Testing Suite for Web Durability and Speed
+**High-Performance Load Testing Suite for Web Durability and Speed**
 
-Resilio is a professional-grade performance engineering toolkit designed for QA Engineers, Developers and DevOps practitioners. It provides a structured, technology-agnostic methodology to measure the speed, endurance, and scalability of web applications and APIs.
-
-By leveraging the reliability of ApacheBench and adding layers of statistical analysis and automated reporting, Resilio transforms raw network data into high-fidelity performance intelligence.
-
-## Introduction
-
-### Core Engines
-
-Resilio SLT (Simple Load Testing) The `slt.sh` engine is optimized for agile development cycles. It provides rapid feedback on endpoint performance, making it ideal for smoke testing, initial benchmarks, and CI/CD integration.
-
-Resilio DLT (Deep Load Testing) The `dlt.sh` engine is a research-based powerhouse designed for rigorous statistical analysis and endurance testing. It follows industry standards (ISO 25010) and academic frameworks (Jain, 1991) to provide 95 percent confidence intervals, ramp-up phases, and sustained load modeling.
-
-### Guidance
-
-This guide provides instructions for using two custom load testing scripts: `slt.sh` (Resilio SLT) and `dlt.sh` (Resilio DLT). These scripts are designed to help you measure and analyze the performance of web applications and APIs built with any technology stack including PHP, JavaScript (Node.js), Go, Python, Ruby, Java, or any other web technology.
-
-Both scripts work by sending HTTP requests to your application endpoints and measuring the responses. They are technology-agnostic because they test your application through its HTTP interface, not its internal code.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-6.0-green.svg)](CHANGELOG.md)
 
 ---
 
-## Performance Methodology and Statistical Validity
+## Overview
 
-Resilio is not a basic wrapper for ApacheBench; it is a framework that implements rigorous statistical controls to ensure that performance data is actionable and scientifically sound.
+Resilio is a professional-grade performance engineering toolkit designed for QA Engineers, Developers, and DevOps practitioners. It provides a structured, technology-agnostic methodology to measure the speed, endurance, and scalability of web applications and APIs.
 
-### 1. Tail Latency and Percentiles (P95/P99)
+By leveraging the reliability of ApacheBench and adding layers of statistical analysis, automated hypothesis testing, and research-based methodologies, Resilio transforms raw network data into high-fidelity performance intelligence.
 
-Average response times are often misleading because they mask the "long tail" of user dissatisfaction. Resilio focuses on **P95 and P99 latencies**, which identify the worst-case scenarios caused by resource contention, garbage collection pauses, or network jitter.
+### Why Resilio?
 
-### 2. Stability Measurement (CV)
-
-We use the **Coefficient of Variation (CV)** to measure system stability. A low average RPS is acceptable if the CV is low (indicating consistency), but a high RPS with a high CV indicates an unstable system that is likely to fail under unpredictable production spikes.
-
-### 3. Scientific Three-Phase Execution
-
-To adhere to the principles of the **USE Method** (Utilization, Saturation, and Errors), Resilio DLT executes tests in three distinct stages:
-
-* **Warm-up:** Primes the application environment (JIT, connection pools, and caches).
-* **Ramp-up:** Observes the system's "Knee of the Curve" where throughput begins to saturate.
-* **Sustained Load:** Collects the primary data set for statistical analysis.
-
-### 4. Mathematical Foundation
-
-The DLT engine calculates **95% Confidence Intervals** for all Mean RPS values. This ensures that the results are not just a "snapshot" of a lucky run, but a mathematically probable representation of your system's true performance capacity.
-
-> For a deep dive into the mathematical formulas, Z-score calculations, and ISO 25010 compliance details used in this toolkit, please refer to our technical document:
-> **[View the Resilio Performance Methodology Gist](https://gist.github.com/cakmoel/2dbc49121058b3549904a35d33184fe2)**
+- **Research-Based Methodology**: Implements ISO 25010 standards and academic frameworks (Jain, 1991; Welch, 1947)
+- **Statistical Rigor**: Welch's t-test, Cohen's d effect size, and 95% confidence intervals
+- **Technology-Agnostic**: Tests any web application via HTTP protocol (PHP, Node.js, Python, Go, Java, Ruby, .NET, Rust)
+- **Automated Regression Detection**: Compare against baselines with statistical hypothesis testing
+- **Hybrid Baseline Management**: Git-integrated for production, local-only for development
+- **Comprehensive Metrics**: RPS, percentiles (P50/P95/P99), latency, stability (CV), and error rates
 
 ---
 
-## When to Use Each Script
+## Core Engines
 
-### Use slt.sh (Resilio SLT) when:
+### Resilio SLT (Simple Load Testing) - `slt.sh`
 
-- You need quick performance metrics for your application
-- You want to test specific endpoints with straightforward load patterns
-- You need basic statistics like average requests per second, response times, and percentiles
-- You are doing initial performance checks or quick benchmarks
-- You have limited time and need immediate results
-- You want to compare performance between different endpoints
+The **SLT engine** is optimized for agile development cycles and rapid feedback. Perfect for:
 
-### Use dlt.sh (Resilio DLT) when:
+- Quick performance checks during development
+- Smoke testing before deployments
+- CI/CD pipeline integration
+- Endpoint comparison and basic benchmarking
 
-- You need comprehensive performance analysis with statistical rigor
-- You require detailed reports with confidence intervals and standard deviations
-- You want to test how your application handles gradual load increases
-- You need to identify performance bottlenecks and system behavior under sustained load
-- You are conducting formal performance testing or capacity planning
-- You need scientifically-backed metrics for stakeholder reports
-- You want to detect memory leaks or performance degradation over time
+**Key Features:**
+- Configurable iterations (default: 1000)
+- Concurrent user simulation (default: 10)
+- Percentile analysis (P50, P95, P99)
+- Stability measurement (Coefficient of Variation)
+- Error tracking without breaking calculations
+- Comprehensive summary reports in Markdown
 
-## Prerequisites
+### Resilio DLT (Deep Load Testing) - `dlt.sh`
 
-Before using these scripts, ensure your system has the following installed:
+The **DLT engine** is a research-grade powerhouse designed for rigorous statistical analysis. Perfect for:
 
-### Required Software
+- Production baseline establishment
+- Statistical hypothesis testing (Welch's t-test)
+- Regression detection with effect size analysis
+- Capacity planning and SLA validation
+- Performance trending over releases
 
-1. Bash Shell - Available by default on Linux and macOS
-2. ApacheBench (ab) - The core load testing tool
-3. bc - Basic calculator for mathematical operations
-4. awk - Text processing utility
-5. grep - Pattern matching utility
+**Key Features:**
+- Three-phase execution (Warm-up → Ramp-up → Sustained)
+- Welch's t-test for comparing performance
+- Cohen's d effect size calculation
+- 95% confidence intervals
+- Automated regression detection
+- Git-integrated baseline management
+- System resource monitoring (CPU, memory, disk I/O)
 
-### Installing Prerequisites
+---
 
-On Ubuntu/Debian:
+## Quick Start
+
+### Prerequisites
+
+**Required:**
+- Bash 4.0+
+- ApacheBench (ab)
+- bc (basic calculator)
+- GNU coreutils (awk, grep, sort)
+
+**Optional:**
+- Git (for baseline version control)
+- iostat (for system monitoring)
+
+**Installation:**
 
 ```bash
+# Ubuntu/Debian
 sudo apt-get update
-sudo apt-get install apache2-utils bc gawk grep coreutils
-```
+sudo apt-get install apache2-utils bc gawk grep coreutils sysstat
 
-On CentOS/RHEL/Fedora:
+# CentOS/RHEL/Fedora
+sudo yum install httpd-tools bc gawk grep coreutils sysstat
 
-```bash
-sudo yum install httpd-tools bc gawk grep coreutils
-```
-
-On macOS:
-
-```bash
+# macOS
 brew install apache2
+# bc, awk, grep are pre-installed
 ```
 
-Note: bc, awk, and grep are typically pre-installed on macOS.
-
-Verify Installation:
+**Verify Installation:**
 
 ```bash
-ab -V
-bc --version
-awk --version
-grep --version
+ab -V && bc --version && awk --version && grep --version
 ```
 
-## Installation
-
-### Step 1: Download the Scripts
-
-Download both `slt.sh` and `dlt.sh` to your preferred directory.
-
-### Step 2: Make Scripts Executable
+### Installation
 
 ```bash
-chmod +x slt.sh
-chmod +x dlt.sh
+# 1. Clone or download the repository
+git clone https://github.com/yourusername/resilio.git
+cd resilio
+
+# 2. Make scripts executable
+chmod +x slt.sh dlt.sh
+
+# 3. Configure test scenarios (edit the SCENARIOS section)
+nano slt.sh  # or dlt.sh
 ```
 
-### Step 3: Verify Scripts are Ready
+### Basic Usage
+
+**Simple Load Testing (SLT):**
 
 ```bash
+# Default: 1000 iterations, 100 requests/test, 10 concurrent users
 ./slt.sh
-./dlt.sh
-```
 
-If you see the scripts starting to run (they will begin testing), they are ready. Press Ctrl+C to stop.
-
-## Configuring the Scripts
-
-Before running the tests, you need to configure the URLs you want to test.
-
-### Configuring slt.sh
-
-Open `slt.sh` in a text editor and locate the SCENARIOS section (around line 40):
-
-```bash
-declare -A SCENARIOS=(
-    ["Static"]="STATIC_PAGE"
-    ["Dynamic"]="DYNAMIC_PAGE"
-    ["404_Not_Found"]="404_ERROR"
-)
-```
-
-Replace these URLs with your application's endpoints:
-
-```bash
-declare -A SCENARIOS=(
-    ["Homepage"]="http://your-app.com/"
-    ["API_Endpoint"]="http://your-app.com/api/v1/users"
-    ["Product_Page"]="http://your-app.com/products/123"
-)
-```
-
-### Configuring dlt.sh
-
-Open `dlt.sh` in a text editor and locate the SCENARIOS section (around line 64):
-
-```bash
-declare -A SCENARIOS=(
-    ["Static"]="STATIC_PAGE"
-    ["Dynamic"]="DYNAMIC_PAGE"
-    ["API_Endpoint"]="API_ENDPOINT"
-    ["404_Error"]="404_ERROR"
-)
-```
-
-Replace with your URLs:
-
-```bash
-declare -A SCENARIOS=(
-    ["Homepage"]="http://your-app.com/"
-    ["User_Dashboard"]="http://your-app.com/dashboard"
-    ["API_Products"]="http://your-app.com/api/v1/products"
-)
-```
-
-## Running the Scripts
-
-### Running slt.sh (Simple Load Testing)
-
-Basic Usage:
-
-```bash
-./slt.sh
-```
-
-This will run 1000 iterations with default settings.
-
-With Custom Parameters:
-
-```bash
+# Custom parameters
 ITERATIONS=500 AB_REQUESTS=50 AB_CONCURRENCY=5 ./slt.sh
 ```
 
-Available Environment Variables:
-
-- ITERATIONS - Number of test iterations (default: 1000)
-- AB_REQUESTS - Requests per test (default: 100)
-- AB_CONCURRENCY - Concurrent users (default: 10)
-- AB_TIMEOUT - Timeout in seconds (default: 30)
-
-Example for Light Testing:
+**Deep Load Testing (DLT):**
 
 ```bash
-ITERATIONS=100 AB_REQUESTS=50 AB_CONCURRENCY=5 ./slt.sh
-```
-
-Example for Heavy Testing:
-
-```bash
-ITERATIONS=2000 AB_REQUESTS=500 AB_CONCURRENCY=50 ./slt.sh
-```
-
-### Running dlt.sh (Deep Load Testing)
-
-Basic Usage:
-
-```bash
+# Research-based three-phase test
 ./dlt.sh
+
+# Results include hypothesis testing against baseline
+cat load_test_reports_*/hypothesis_testing_*.md
 ```
 
-This executes a comprehensive three-phase test: warm-up, ramp-up, and sustained load.
+---
 
-Understanding dlt.sh Parameters:
+## When to Use Each Engine
 
-The script uses research-based parameters that are pre-configured:
+| Scenario | Use SLT | Use DLT |
+|----------|---------|---------|
+| Quick performance check | ✅ | ❌ |
+| CI/CD integration | ✅ | ⚠️ (time-consuming) |
+| Compare endpoints | ✅ | ❌ |
+| Initial benchmarking | ✅ | ❌ |
+| Production baseline | ❌ | ✅ |
+| Statistical validation | ❌ | ✅ |
+| Regression detection | ❌ | ✅ |
+| Capacity planning | ❌ | ✅ |
+| SLA validation | ❌ | ✅ |
+| Memory leak detection | ❌ | ✅ |
 
-- Total iterations: 1000 (50 warm-up + 100 ramp-up + 850 sustained)
-- Requests per test: 1000
-- Concurrency: 50 users
-- Think time: 2000ms between requests
+---
 
-These values are optimized for statistical validity and should not be changed unless you understand the research methodology.
+## Technology Compatibility
 
-## Understanding the Results
+Resilio works with **any web technology** because it tests via HTTP protocol:
 
-### slt.sh Output
+| Technology | Framework Examples | Status |
+|------------|-------------------|--------|
+| **PHP** | Laravel, Symfony, WordPress, Slim | ✅ Fully Supported |
+| **JavaScript** | Node.js, Express, Next.js, Nest.js | ✅ Fully Supported |
+| **Python** | Django, Flask, FastAPI, Pyramid | ✅ Fully Supported |
+| **Go** | Gin, Echo, Fiber, Chi | ✅ Fully Supported |
+| **Ruby** | Rails, Sinatra, Hanami | ✅ Fully Supported |
+| **Java** | Spring Boot, Micronaut, Quarkus | ✅ Fully Supported |
+| **.NET** | ASP.NET Core, Nancy | ✅ Fully Supported |
+| **Rust** | Actix-web, Rocket, Axum | ✅ Fully Supported |
 
-After the test completes, you will find results in a timestamped directory:
+**Why it works:** Resilio operates at the HTTP protocol layer, measuring request/response cycles exactly as end-users experience them—regardless of backend implementation.
+
+---
+
+## Performance Methodology
+
+Resilio is not a basic wrapper for ApacheBench—it's a framework implementing rigorous statistical controls to ensure performance data is actionable and scientifically sound.
+
+### 1. Tail Latency Analysis (P95/P99)
+
+Average response times mask the "long tail" of user dissatisfaction. Resilio focuses on **P95 and P99 latencies** to identify worst-case scenarios caused by:
+- Resource contention
+- Garbage collection pauses
+- Network jitter
+- Database query variance
+
+### 2. Stability Measurement (Coefficient of Variation)
+
+The **CV metric** reveals system consistency:
+- **CV < 10%**: Excellent stability
+- **CV < 20%**: Good stability
+- **CV < 30%**: Moderate stability
+- **CV ≥ 30%**: Poor stability (investigate)
+
+A low average RPS is acceptable if CV is low (consistency), but high RPS with high CV indicates instability.
+
+### 3. Three-Phase Execution (DLT Only)
+
+Adheres to the **USE Method** (Utilization, Saturation, Errors):
+
+1. **Warm-up Phase** (50 iterations): Primes JIT compilers, connection pools, and caches
+2. **Ramp-up Phase** (100 iterations): Gradually increases load to observe the "Knee of the Curve"
+3. **Sustained Load** (850 iterations): Collects primary dataset for statistical analysis
+
+### 4. Statistical Hypothesis Testing (DLT Only)
+
+DLT implements **Welch's t-test** to compare current performance against baselines:
+
+- **Null Hypothesis (H₀)**: No significant difference exists
+- **Alternative Hypothesis (H₁)**: Significant difference detected
+- **Significance Level**: α = 0.05 (95% confidence)
+
+**Effect Size (Cohen's d):**
+- d < 0.2: Negligible
+- d ≈ 0.5: Medium
+- d > 0.8: Large
+
+This ensures decisions are based on **both statistical significance and practical importance**.
+
+### 5. 95% Confidence Intervals
+
+All Mean RPS values include confidence intervals, ensuring results represent true system capacity—not lucky runs.
+
+---
+
+## Understanding Results
+
+### SLT Output Structure
 
 ```
 load_test_results_YYYYMMDD_HHMMSS/
-  - summary_report.md          (Main report)
-  - console_output.log         (Test execution log)
-  - execution.log              (Detailed execution log)
-  - error.log                  (Error tracking)
-  - raw_*.txt                  (Raw ApacheBench outputs)
+├── summary_report.md          # Main performance report
+├── console_output.log         # Real-time test output
+├── execution.log              # Detailed execution log
+├── error.log                  # Error tracking
+└── raw_*.txt                  # Raw ApacheBench outputs
 ```
 
-Key Metrics in the Report:
+**Key Metrics:**
+- **Average RPS**: Mean throughput
+- **Median RPS**: Less affected by outliers
+- **Standard Deviation**: Consistency indicator
+- **P50/P95/P99**: Percentile response times
+- **CV (Coefficient of Variation)**: Stability score
+- **Success/Error Rate**: Reliability metrics
 
-- Average RPS (Requests Per Second) - Throughput of your application
-- Median RPS - Middle value, less affected by outliers
-- Standard Deviation - Consistency of performance
-- P50/P95/P99 - Percentile response times
-- Success Rate - Percentage of successful requests
-- Error Rate - Percentage of failed requests
-
-### dlt.sh Output
-
-Results are saved in a research-grade report directory:
+### DLT Output Structure
 
 ```
 load_test_reports_YYYYMMDD_HHMMSS/
-  - research_report_YYYYMMDD_HHMMSS.md  (Comprehensive report)
-  - system_metrics.csv                   (CPU, memory, disk metrics)
-  - error_log.txt                        (Error tracking)
-  - execution.log                        (Test phases log)
-  - raw_data/                            (All raw test outputs)
-  - charts/                              (Reserved for chart generation)
+├── research_report_*.md         # Comprehensive analysis
+├── hypothesis_testing_*.md      # Statistical comparison
+├── system_metrics.csv           # CPU, memory, disk I/O
+├── error_log.txt                # Error tracking
+├── execution.log                # Phase-by-phase log
+├── raw_data/                    # All ApacheBench outputs
+└── charts/                      # Reserved for visualizations
 ```
 
-Key Metrics in the Report:
+**Key Metrics:**
+- **Mean with 95% CI**: Statistical accuracy bounds
+- **Welch's t-test**: p-value for significance
+- **Cohen's d**: Practical effect size
+- **Verdict**: Regression/Improvement/No Change
+- **Connection vs Processing Time**: Bottleneck identification
 
-- Mean with 95% Confidence Intervals - Statistical accuracy
-- Median and Standard Deviation - Distribution analysis
-- P95/P99 Latency - Tail latency for SLA validation
-- Connection Time vs Processing Time - Bottleneck identification
-- Coefficient of Variation - Stability indicator
-- Error Rate and Success Rate - Reliability metrics
+---
 
-## Testing Different Technologies
+## Configuration
 
-These scripts work with ANY web technology because they test through HTTP endpoints. The scripts use ApacheBench which sends HTTP requests and measures responses - it does not care what technology processes those requests on the server side.
+### Configuring Test Scenarios
 
-### Why It Works with Any Technology
-
-The scripts are technology-agnostic because:
-
-1. They communicate via HTTP protocol (the universal web standard)
-2. They only measure request/response cycles
-3. They do not interact with your application code directly
-4. They work like a web browser sending requests to your server
-
-Whether your server processes requests with PHP, Node.js, Python, Go, Ruby, Java, or any other language, the HTTP interface remains the same.
-
-### Testing PHP Applications
-
-Laravel Example:
+Both scripts use a `SCENARIOS` associative array:
 
 ```bash
-declare -A SCENARIOS=(
-    ["Home"]="http://localhost:8000/"
-    ["API_Users"]="http://localhost:8000/api/users"
-    ["Login_Page"]="http://localhost:8000/login"
-)
-```
-
-WordPress Example:
-
-```bash
-declare -A SCENARIOS=(
-    ["Homepage"]="http://localhost/wordpress/"
-    ["Post_Page"]="http://localhost/wordpress/2024/01/sample-post/"
-    ["API"]="http://localhost/wordpress/wp-json/wp/v2/posts"
-)
-```
-
-### Testing JavaScript (Node.js) Applications
-
-Express.js Example:
-
-```bash
-declare -A SCENARIOS=(
-    ["API_Status"]="http://localhost:3000/api/status"
-    ["Users_List"]="http://localhost:3000/api/users"
-    ["Products"]="http://localhost:3000/api/products"
-)
-```
-
-Next.js Example:
-
-```bash
-declare -A SCENARIOS=(
-    ["Homepage"]="http://localhost:3000/"
-    ["API_Route"]="http://localhost:3000/api/data"
-    ["Dynamic_Page"]="http://localhost:3000/blog/post-1"
-)
-```
-
-### Testing Python Applications
-
-Django Example:
-
-```bash
+# Edit slt.sh or dlt.sh
 declare -A SCENARIOS=(
     ["Homepage"]="http://localhost:8000/"
-    ["API_Items"]="http://localhost:8000/api/items/"
-    ["Admin"]="http://localhost:8000/admin/"
+    ["API_Users"]="http://localhost:8000/api/users"
+    ["Product_Page"]="http://localhost:8000/products/123"
 )
 ```
 
-Flask Example:
+### Environment Variables (SLT)
 
 ```bash
-declare -A SCENARIOS=(
-    ["Index"]="http://localhost:5000/"
-    ["API_Data"]="http://localhost:5000/api/data"
-)
+ITERATIONS=1000          # Number of test iterations
+AB_REQUESTS=100          # Requests per test
+AB_CONCURRENCY=10        # Concurrent users
+AB_TIMEOUT=30            # Timeout in seconds
 ```
 
-FastAPI Example:
+**Example:**
 
 ```bash
-declare -A SCENARIOS=(
-    ["Docs"]="http://localhost:8000/docs"
-    ["API_Users"]="http://localhost:8000/api/v1/users"
-    ["Health"]="http://localhost:8000/health"
-)
+ITERATIONS=500 AB_CONCURRENCY=20 ./slt.sh
 ```
 
-### Testing Go Applications
+### Environment Configuration (DLT)
 
-Standard Go HTTP Server:
+**Production Mode** (Git-tracked baselines):
 
 ```bash
-declare -A SCENARIOS=(
-    ["Health"]="http://localhost:8080/health"
-    ["API_V1"]="http://localhost:8080/api/v1/resources"
-)
+# Create .env file
+echo "APP_ENV=production" > .env
+
+# Configure URLs
+echo 'STATIC_PAGE=https://prod.example.com/' >> .env
+echo 'DYNAMIC_PAGE=https://prod.example.com/api/users' >> .env
+
+./dlt.sh
 ```
 
-Gin Framework:
+Baselines saved to: `./baselines/` (Git-tracked)
+
+**Local Development Mode** (local-only baselines):
 
 ```bash
-declare -A SCENARIOS=(
-    ["Ping"]="http://localhost:8080/ping"
-    ["API_Products"]="http://localhost:8080/api/products"
-)
+echo "APP_ENV=local" > .env
+./dlt.sh
 ```
 
-### Testing Ruby Applications
+Baselines saved to: `./.dlt_local/` (not Git-tracked)
 
-Rails Example:
+---
 
-```bash
-declare -A SCENARIOS=(
-    ["Root"]="http://localhost:3000/"
-    ["API_Posts"]="http://localhost:3000/api/v1/posts"
-    ["Users"]="http://localhost:3000/users"
-)
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+name: Performance Regression Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Need baselines from history
+      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apache2-utils bc sysstat
+      
+      - name: Run Load Test
+        run: |
+          chmod +x dlt.sh
+          ./dlt.sh
+      
+      - name: Check for Regressions
+        run: |
+          if grep -q "REGRESSION" load_test_reports_*/hypothesis_testing_*.md; then
+            echo "Performance regression detected!"
+            exit 1
+          fi
+      
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-reports
+          path: load_test_reports_*/**
 ```
 
-Sinatra Example:
-
-```bash
-declare -A SCENARIOS=(
-    ["Home"]="http://localhost:4567/"
-    ["API"]="http://localhost:4567/api/data"
-)
-```
-
-### Testing Java Applications
-
-Spring Boot Example:
-
-```bash
-declare -A SCENARIOS=(
-    ["Actuator"]="http://localhost:8080/actuator/health"
-    ["API_Products"]="http://localhost:8080/api/products"
-    ["Dashboard"]="http://localhost:8080/dashboard"
-)
-```
-
-### Testing .NET Applications
-
-ASP.NET Core Example:
-
-```bash
-declare -A SCENARIOS=(
-    ["Home"]="http://localhost:5000/"
-    ["API_WeatherForecast"]="http://localhost:5000/api/weatherforecast"
-    ["Health"]="http://localhost:5000/health"
-)
-```
-
-### Testing Rust Applications
-
-Actix-web Example:
-
-```bash
-declare -A SCENARIOS=(
-    ["Index"]="http://localhost:8080/"
-    ["API_Users"]="http://localhost:8080/api/users"
-)
-```
+---
 
 ## Best Practices
 
-### Before Running Tests
+### Before Testing
 
-1. Test in a Non-Production Environment - Never run load tests against production servers without proper authorization
-2. Warm Up Your Application - Start your application and let it initialize completely before testing
-3. Check Resource Limits - Ensure your testing machine has sufficient resources
-4. Disable Rate Limiting - Temporarily disable rate limiting or IP blocking during tests
-5. Monitor Your Application - Keep application logs and monitoring tools open during tests
-
-### During Tests
-
-1. Start Small - Begin with low concurrency and few iterations
-2. Gradually Increase Load - Use dlt.sh for automatic gradual load increase
-3. Monitor System Resources - Watch CPU, memory, and disk usage
-4. Document Conditions - Note any special conditions or configurations
+1. **Never test production** without authorization
+2. **Warm up your application** before recording metrics
+3. **Check resource limits**: `ulimit -n 10000`
+4. **Disable rate limiting** temporarily during tests
+5. **Monitor application logs** during test execution
 
 ### Interpreting Results
 
-1. Compare Against Baselines - Establish baseline performance metrics
-2. Look for Patterns - Identify performance degradation patterns
-3. Focus on Percentiles - P95 and P99 are more important than averages
-4. Check Error Rates - Any error rate above 1% requires investigation
-5. Analyze Standard Deviation - High standard deviation indicates unstable performance
+1. **Focus on percentiles**: P95/P99 matter more than averages
+2. **Check CV first**: High CV = unstable system
+3. **Compare against baselines**: Use DLT for trend analysis
+4. **Consider both p-value and effect size**: Statistical significance ≠ practical importance
+5. **Document test conditions**: Note system state, data volume, background jobs
 
-## Common Issues and Solutions
-
-Issue: Connection Refused
-
-Solution: Verify your application is running and accessible at the specified URL
+### Production Baseline Management
 
 ```bash
-curl http://localhost:8000/
+# 1. Establish baseline during stable period
+echo "APP_ENV=production" > .env
+./dlt.sh
+
+# 2. Commit baselines to Git
+git add baselines/
+git commit -m "chore: establish performance baseline for release v2.0"
+git push
+
+# 3. Future tests automatically compare against this baseline
+./dlt.sh
+# Check: load_test_reports_*/hypothesis_testing_*.md
 ```
 
-Issue: Timeout Errors
+---
 
-Solution: Increase AB_TIMEOUT or reduce AB_CONCURRENCY
+## Troubleshooting
+
+### Common Issues
+
+**1. "bc incompatible with current locale"**
 
 ```bash
+# Solution A: Use C locale
+LC_NUMERIC=C ./dlt.sh
+
+# Solution B: Install en_US.UTF-8
+sudo locale-gen en_US.UTF-8
+```
+
+**2. Connection Refused**
+
+```bash
+# Verify application is running
+curl http://localhost:8000/
+
+# Check firewall
+sudo ufw status
+```
+
+**3. Timeout Errors**
+
+```bash
+# Increase timeout or reduce concurrency
 AB_TIMEOUT=60 AB_CONCURRENCY=5 ./slt.sh
 ```
 
-Issue: Too Many Open Files
-
-Solution: Increase system file descriptor limits
+**4. Too Many Open Files**
 
 ```bash
+# Increase file descriptor limit
 ulimit -n 10000
 ```
 
-Issue: Script Permission Denied
+---
 
-Solution: Ensure scripts are executable
+## Documentation
 
-```bash
-chmod +x slt.sh dlt.sh
-```
+- **[USAGE_GUIDE.md](USAGE_GUIDE.md)** - Comprehensive usage guide with real-world scenarios
+- **[REFERENCES.md](REFERENCES.md)** - Academic and research references
+- **[Performance Methodology Gist](https://gist.github.com/cakmoel/2dbc49121058b3549904a35d33184fe2)** - Mathematical formulas and ISO 25010 compliance
 
-Issue: Command Not Found (ab, bc, etc.)
+---
 
-Solution: Install missing prerequisites as described in the Prerequisites section
+## Research Foundations
 
-## Advanced Usage
+Resilio implements methodologies from:
 
-### Testing Authenticated Endpoints
+- **Jain, R. (1991)** - Statistical methods for performance measurement
+- **Welch, B. L. (1947)** - Unequal variance t-test
+- **Cohen, J. (1988)** - Effect size interpretation
+- **ISO/IEC 25010:2011** - Performance efficiency metrics
+- **Barford & Crovella (1998)** - Workload characterization
+- **Gunther, N. J. (2007)** - Queueing theory and capacity planning
 
-To test endpoints that require authentication, you need to modify the ab command in the scripts to include authentication headers.
+---
 
-Open the script and locate the ab command (around line 200 in slt.sh or line 350 in dlt.sh):
+## Contributing
 
-```bash
-timeout $TEST_TIMEOUT ab -n $AB_REQUESTS -c $concurrency "$url" > "$temp_file" 2>&1
-```
+Contributions are welcome! Please:
 
-Replace with:
+1. Fork the repository
+2. Create a feature branch
+3. Include tests for new functionality
+4. Update documentation
+5. Submit a pull request
 
-```bash
-timeout $TEST_TIMEOUT ab -H "Authorization: Bearer YOUR_TOKEN" -n $AB_REQUESTS -c $concurrency "$url" > "$temp_file" 2>&1
-```
-
-### Testing POST Requests
-
-For POST requests with data, modify the ab command:
-
-```bash
-timeout $TEST_TIMEOUT ab -p postdata.txt -T "application/json" -n $AB_REQUESTS -c $concurrency "$url" > "$temp_file" 2>&1
-```
-
-Create a `postdata.txt` file with your JSON payload:
-
-```json
-{"username":"test","password":"test123"}
-```
-
-### Running Tests in Background
-
-To run tests in the background and continue working:
-
-```bash
-nohup ./slt.sh > test_output.log 2>&1 &
-```
-
-Check progress:
-
-```bash
-tail -f test_output.log
-```
-
-## Comparing Results Across Technologies
-
-When comparing performance across different technologies, ensure:
-
-1. Same Hardware - Run tests on identical server specifications
-2. Same Network Conditions - Use consistent network setup
-3. Same Database - If applicable, use the same database with identical data
-4. Same Test Scenarios - Use equivalent endpoints (e.g., list 100 users)
-5. Same Load Parameters - Use identical ITERATIONS, AB_REQUESTS, and AB_CONCURRENCY values
-
-## Technical Explanation: Why These Scripts Work Universally
-
-These scripts leverage ApacheBench, which operates at the HTTP protocol level. Here's why it works with any technology:
-
-### The HTTP Protocol Layer
-
-When a web browser or tool like ApacheBench makes a request:
-
-1. Client sends HTTP request to server
-2. Server receives request (regardless of backend language)
-3. Application processes request using its technology (PHP, Node.js, etc.)
-4. Server sends HTTP response back to client
-5. Client measures the time taken
-
-The scripts measure the complete request-response cycle from the client's perspective, exactly as a real user would experience it.
-
-### What Gets Tested
-
-The scripts test:
-
-- Response time (how fast your server responds)
-- Throughput (requests per second your server can handle)
-- Reliability (success vs failure rate)
-- Consistency (variance in response times)
-- Latency distribution (P50, P95, P99 percentiles)
-
-These metrics are independent of your programming language or framework.
-
-### What Does NOT Get Tested
-
-The scripts do not test:
-
-- Your application's internal code quality
-- Database query efficiency (only the total response time)
-- Memory usage within your application
-- Code-level performance bottlenecks
-
-For internal profiling, use language-specific tools (Xdebug for PHP, node --inspect for Node.js, pprof for Go, etc.).
-
-## Real-World Example: Multi-Technology Comparison
-
-Here's how you might test different versions of the same API built with different technologies:
-
-```bash
-# PHP Laravel API
-declare -A SCENARIOS=(
-    ["PHP_API"]="http://localhost:8000/api/products"
-)
-
-# Node.js Express API
-declare -A SCENARIOS=(
-    ["NodeJS_API"]="http://localhost:3000/api/products"
-)
-
-# Python FastAPI
-declare -A SCENARIOS=(
-    ["Python_API"]="http://localhost:8001/api/products"
-)
-
-# Go API
-declare -A SCENARIOS=(
-    ["Go_API"]="http://localhost:8080/api/products"
-)
-```
-
-Run the same test parameters against each and compare the results to see which implementation performs best for your use case.
-
-## Best Practices for Senior QA
-
-1. Establish Baselines: Always run a Simple test on a stable environment to establish a golden baseline before testing new  code changes.
-
-2. Control Variables: Ensure the testing machine and the target server are on a consistent network to prevent external latency from skewing data.
-
-3. Monitor Percentiles: Focus on P95 and P99 metrics for SLA validation rather than simple averages.
-
-4. Warm Up Your Application: Use dlt.sh to ensure the application is initialized completely before recording final metrics.
-
-5. Monitor System Resources: Watch CPU, memory, and disk usage on the server side during Sustained Load phases.
-
-
-## Conclusion
-
-These load testing scripts provide powerful tools for measuring web application performance regardless of the underlying technology. Start with slt.sh for quick checks, and use dlt.sh for comprehensive analysis and formal reporting.
-
-Remember that load testing is an iterative process. Run tests regularly, compare results over time, and use the insights to optimize your application's performance.
-
-The beauty of HTTP-based testing is that you can test any web application or API regardless of how it's built, making these scripts valuable tools for any web developer or DevOps engineer.
+---
 
 ## License
-This project is licensed under the MIT License. Copyright (c) 2025 M.Noermoehammad.
 
-Resilio: Built for Speed, Tested for Durability.
+This project is licensed under the MIT License.
+
+Copyright © 2025 M.Noermoehammad
+
+---
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/resilio/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/resilio/discussions)
+- **Email**: your.email@example.com
+
+---
+
+**Resilio: Built for Speed, Tested for Durability**
