@@ -1,11 +1,55 @@
 # --- Ignore test results and logs ---
 load_test_results_/ 
-load_test_reports_/ 
+
+# =============================================================================
+# LOCAL DEVELOPMENT BASELINES (Not tracked)
+# =============================================================================
+.dlt_local/
+**/local_baseline_*.csv
+**/dev_baseline_*.csv
+**/staging_baseline_*.csv
+
+# =============================================================================
+# TEST REPORTS (Always local)
+# =============================================================================
+load_test_reports_*/
+
+# =============================================================================
+# TEMPORARY FILES
+# =============================================================================
+*.tmp
+*.temp
+raw_data/
+charts/
+*.parsed
+
+# =============================================================================
+# PRODUCTION BASELINES (Git-tracked - explicitly NOT ignored)
+# =============================================================================
+# baselines/production_baseline_*.csv    # TRACKED
+# baselines/metadata.json                 # TRACKED
+
+# =============================================================================
+# ENVIRONMENT FILES
+# =============================================================================
+.env.local
+.env.*.local
+.env.backup
+
+# DO NOT ignore .env - needed for environment detection
+# .env  # <- This should be tracked or in .env.example
+
+# =============================================================================
+# SYSTEM FILES
+# =============================================================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
 *.log 
 *.csv 
 *.txt 
-raw_data/ 
-charts/
-
-# --- OS generated files ---
-.DS_Store Thumbs.db
