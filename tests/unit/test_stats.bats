@@ -2,6 +2,7 @@
 
 setup() {
   export CONF_Z=1.96
+  export BASE_DIR="/var/www/html/load-tester"
 }
 
 @test "mean calculation is correct" {

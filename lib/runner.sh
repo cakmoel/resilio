@@ -1,30 +1,70 @@
 # shellcheck shell=bash
 
-init_run() {
-  RUN_ID="$(date +%Y%m%d_%H%M%S)"
-  OUT_DIR="$REPORT_ROOT/run_$RUN_ID"
-  RAW_DIR="$OUT_DIR/raw"
-  mkdir -p "$RAW_DIR"
+capture_system_metrics() {
+    local timestamp=$(date +%s)
+    local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
+    local mem_stats=$(free -m | awk 'NR==2{print $3","$4}')
+    local load=$(uptime | awk -F'load average:' '{print $2}' | tr -d ' ' | tr ',' ' ')
+    local disk_io=$(iostat -d -k 1 2 2>/dev/null | tail -1 | awk '{print $3","$4}' || echo "0,0")
+    
+    echo "$timestamp,${cpu_usage:-0},0,$mem_stats,$load,$disk_io" >> "$SYSTEM_METRICS_FILE"
 }
 
-run_scenario() {
-  local name="$1"
-  local url="$2"
+run_research_test() {
+    local url="$1"
+    local scenario="$2"
+    local iteration="$3"
+    local concurrency="$4"
+    
+    local temp_file="${REPORT_DIR}/raw_data/${scenario}_iter${iteration}_$(date +%s).txt"
+    
+    timeout "$TEST_TIMEOUT" "$AB_BIN" -k -n "$AB_REQUESTS" -c "$concurrency" "$url" > "$temp_file" 2>&1
+    
+    local result=$(parse_ab_output "$temp_file" "$scenario")
+    echo "$result" > "${temp_file}.parsed"
+    
+    local think_time=$(( (RANDOM % THINK_TIME_MS) + 500 ))
+    sleep $(echo "scale=3; $think_time / 1000" | bc)
+    
+    echo "$result"
+}
 
-  local csv="$RAW_DIR/$name.csv"
-  : > "$csv"
-
-  local failures=0
-
-  for ((i=1;i<=ITERATIONS;i++)); do
-    tmp="$RAW_DIR/${name}_$i.csv"
-    if ! "$AB_BIN" -n 1 -c 1 -e "$tmp" "$url" >/dev/null 2>&1; then
-      ((failures++))
-      continue
+save_baseline() {
+    local scenario="$1"
+    local -n data_ref="$2"
+    
+    local baseline_file="${BASELINE_DIR}/${BASELINE_PREFIX}_baseline_${scenario}_$(date +%Y%m%d).csv"
+    
+    echo "iteration,rps,response_time_ms,p95_ms,p99_ms,connect_ms,processing_ms" > "$baseline_file"
+    
+    local iteration=1
+    local -a rps_array=($data_ref)
+    for val in "${rps_array[@]}"; do
+        echo "$iteration,$val,0,0,0,0,0" >> "$baseline_file"
+        ((iteration++))
+    done
+    
+    if [[ "$USE_GIT_TRACKING" == true ]] && command -v git &>/dev/null; then
+        if git -C "$BASE_DIR" rev-parse --git-dir &>/dev/null; then
+            git -C "$BASE_DIR" add "$baseline_file" 2>/dev/null || true
+        fi
     fi
-    awk -F',' 'NR>1 {print $5}' "$tmp" >> "$csv"
-    sleep "$THINK_TIME"
-  done
+    
+    echo "$baseline_file"
+}
 
-  echo "$failures" > "$RAW_DIR/${name}.failures"
+load_latest_baseline() {
+    local scenario="$1"
+    local baseline_file=$(ls -t "${BASELINE_DIR}/${BASELINE_PREFIX}_baseline_${scenario}_"*.csv 2>/dev/null | head -1)
+    if [[ -z "$baseline_file" ]] || [[ ! -f "$baseline_file" ]]; then echo ""; return 1; fi
+    echo "$baseline_file"
+    return 0
+}
+
+load_baseline_data() {
+    local baseline_file="$1"
+    local metric_column="$2"
+    if [[ ! -f "$baseline_file" ]]; then echo ""; return 1; fi
+    local values=$(tail -n +2 "$baseline_file" | cut -d',' -f"$metric_column" | tr '\n' ' ')
+    echo "$values"
 }
