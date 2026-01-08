@@ -33,7 +33,8 @@ Resilio is built on the principle that **performance testing should be both prag
 Both engines leverage:
 
 - **ApacheBench (ab)**: Industry-standard HTTP benchmarking tool
-- **bc**: Floating-point mathematical calculations
+- **Python 3**: High-performance mathematical kernel for DLT statistics
+- **bc**: Legacy fallback for basic floating-point calculations
 - **Bash**: Orchestration and data processing
 - **GNU coreutils**: Text processing (awk, grep, sort)
 
@@ -67,8 +68,8 @@ For internal profiling, use:
 
 ### Overview
 
-**File**: `slt.sh`  
-**Version**: 2.0  
+**File**: `bin/slt.sh`  
+**Version**: 2.1 (Resilio Suite 6.2)  
 **Purpose**: Rapid performance feedback for agile development
 
 ### Architecture
@@ -125,13 +126,13 @@ AB_TIMEOUT=30             # Timeout in seconds
 
 ```bash
 # Light testing (development)
-ITERATIONS=100 AB_REQUESTS=50 AB_CONCURRENCY=5 ./slt.sh
+ITERATIONS=100 AB_REQUESTS=50 AB_CONCURRENCY=5 bin/slt.sh
 
 # Heavy testing (pre-production)
-ITERATIONS=2000 AB_REQUESTS=500 AB_CONCURRENCY=50 ./slt.sh
+ITERATIONS=2000 AB_REQUESTS=500 AB_CONCURRENCY=50 bin/slt.sh
 
 # API stress test
-ITERATIONS=1500 AB_REQUESTS=1000 AB_CONCURRENCY=100 ./slt.sh
+ITERATIONS=1500 AB_REQUESTS=1000 AB_CONCURRENCY=100 bin/slt.sh
 ```
 
 ### Test Scenarios Configuration
@@ -279,16 +280,17 @@ For these capabilities, use **DLT**.
 
 ### Overview
 
-**File**: `dlt.sh`  
-**Version**: 6.0  
+**File**: `bin/dlt.sh`  
+**Version**: 6.2  
 **Purpose**: Research-grade performance analysis with statistical rigor
 
-### Key Enhancements in v6.0
+### Key Enhancements in v6.2
 
-✨ **Smart Locale Auto-Detection**: Automatically configures decimal separator for bc calculations  
+✨ **Python-Powered Math Engine**: Consolidated backend for 40x speedup in analysis  
+✨ **Smart Locale Auto-Detection**: Automatically configures decimal separator  
 ✨ **Hybrid Baseline Management**: Git-tracked for production, local-only for development  
-✨ **Welch's t-test**: Statistical hypothesis testing for performance comparison  
-✨ **Cohen's d**: Effect size calculation for practical significance  
+✨ **Automated Test Selection**: Welch's vs Mann-Whitney based on distribution tests  
+✨ **Advanced Effect Sizes**: Cohen's d and Rank-Biserial correlation  
 ✨ **Automated Regression Detection**: Pass/fail verdicts based on statistics
 
 ### Architecture
@@ -339,10 +341,11 @@ For these capabilities, use **DLT**.
                │
                ▼
 ┌─────────────────────────────────────┐
-│   Hypothesis Testing                 │
+│   Hypothesis Testing & Stats        │
 │   → Load latest baseline             │
-│   → Welch's t-test (p-value)         │
-│   → Cohen's d (effect size)          │
+│   → Call lib/stats.py (Python)       │
+│   → Welch's vs Mann-Whitney U        │
+│   → Cohen's d vs Rank-Biserial       │
 │   → Verdict: Improvement/Regression  │
 └──────────────┬──────────────────────┘
                │
@@ -453,10 +456,10 @@ APP_ENV=staging
 - Simulates steady-state production load
 
 **Analysis & Reporting** (10-30 seconds)
-- Statistical calculations (mean, median, std dev, CI)
+- Statistical calculations (mean, median, std dev, CI) via Python
 - Load baseline from `./baselines/` or `./.dlt_local/`
-- Welch's t-test hypothesis testing
-- Cohen's d effect size calculation
+- Automatic statistical test selection (Welch vs Mann-Whitney)
+- Effect size calculation (Cohen's d or Rank-Biserial)
 - Generate two reports: research + hypothesis testing
 
 **Total Duration**: ~100-150 minutes (1.5-2.5 hours)
@@ -588,7 +591,7 @@ iteration,rps,response_time_ms,p95_ms,p99_ms,connect_ms,processing_ms
    ```bash
    # Method 1: Delete old baseline (forces new baseline creation)
    rm baselines/production_baseline_Dynamic_*.csv
-   ./dlt.sh
+   bin/dlt.sh
    
    # Method 2: Rename current test as baseline
    cp load_test_reports_*/raw_data/* baselines/
@@ -599,7 +602,7 @@ iteration,rps,response_time_ms,p95_ms,p99_ms,connect_ms,processing_ms
 ```bash
 # After release v2.0
 git tag v2.0.0
-./dlt.sh
+bin/dlt.sh
 git add baselines/
 git commit -m "chore: baseline for v2.0.0"
 git push --tags
@@ -668,7 +671,7 @@ pooled_SD = √(((n₁-1)s₁² + (n₂-1)s₂²) / (n₁ + n₂ - 2))
 ```bash
 # Step 1: Establish baseline (before optimization)
 echo "APP_ENV=local" > .env
-./dlt.sh
+bin/dlt.sh
 
 # Output shows:
 # ✓ Dynamic: ./.dlt_local/local_baseline_Dynamic_20250108.csv
@@ -679,7 +682,7 @@ vim app/Models/User.php
 php artisan migrate
 
 # Step 3: Run comparison test
-./dlt.sh
+bin/dlt.sh
 
 # Step 4: Check results
 cat load_test_reports_*/hypothesis_testing_*.md
@@ -728,7 +731,7 @@ API_ENDPOINT=https://prod.example.com/api/v2/posts
 EOF
 
 # Step 3: Establish production baseline
-./dlt.sh
+bin/dlt.sh
 
 # Step 4: Commit baselines to Git
 git add baselines/
@@ -751,7 +754,7 @@ baselines/
 
 ```bash
 # After release v2.0 (3 months later)
-./dlt.sh
+bin/dlt.sh
 
 # Check for regressions
 cat load_test_reports_*/hypothesis_testing_*.md
@@ -804,7 +807,7 @@ jobs:
         id: loadtest
         run: |
           chmod +x dlt.sh
-          ./dlt.sh
+          bin/dlt.sh
           
           # Parse hypothesis testing results
           REPORT=$(find load_test_reports_* -name "hypothesis_testing_*.md" | head -1)
@@ -882,12 +885,12 @@ jobs:
 # Test A: Redis
 echo "CACHE_DRIVER=redis" > .env
 echo "APP_ENV=local" >> .env
-./dlt.sh
+bin/dlt.sh
 # API_Endpoint: 1,247.3 req/s
 
 # Test B: Memcached
 echo "CACHE_DRIVER=memcached" > .env
-./dlt.sh
+bin/dlt.sh
 # API_Endpoint: 1,189.6 req/s
 
 # Compare baselines
@@ -1066,7 +1069,7 @@ timeout $TEST_TIMEOUT ab \
   -H "X-API-Version: v2" \
   -H "X-Client-ID: load-test" \
   -H "Accept: application/json" \
-  -H "User-Agent: Resilio-LoadTest/6.0" \
+  -H "User-Agent: Resilio-LoadTest/6.2" \
   -n $AB_REQUESTS -c $concurrency "$url" > "$temp_file" 2>&1
 ```
 
@@ -1203,7 +1206,7 @@ kill -9 $(cat dlt.pid)
 ```bash
 # Using screen
 screen -S loadtest
-./dlt.sh
+bin/dlt.sh
 # Press Ctrl+A then D to detach
 
 # Reattach later
@@ -1211,7 +1214,7 @@ screen -r loadtest
 
 # Using tmux
 tmux new -s loadtest
-./dlt.sh
+bin/dlt.sh
 # Press Ctrl+B then D to detach
 
 # Reattach later
@@ -1227,7 +1230,7 @@ tmux attach -t loadtest
 export http_proxy=http://proxy.example.com:8080
 export https_proxy=http://proxy.example.com:8080
 
-./dlt.sh
+bin/dlt.sh
 ```
 
 **SOCKS Proxy:**
@@ -1240,7 +1243,7 @@ sudo apt-get install proxychains
 # Configure /etc/proxychains.conf
 # socks5 127.0.0.1 9050
 
-proxychains ./dlt.sh
+proxychains bin/dlt.sh
 ```
 
 ### SSL/TLS Configuration
@@ -1296,14 +1299,14 @@ locale -a | grep en_US
 **Option B: Run with C locale (quickest)**
 
 ```bash
-LC_NUMERIC=C ./dlt.sh
+LC_NUMERIC=C bin/dlt.sh
 ```
 
 **Option C: Set in .env file**
 
 ```bash
 echo "LC_NUMERIC=C" >> .env
-./dlt.sh
+bin/dlt.sh
 ```
 
 **Option D: Set permanently in shell**
@@ -1337,11 +1340,11 @@ Status: No baseline found - this test will be saved as baseline
 
 ```bash
 # Run 1: Establishes baseline
-./dlt.sh
+bin/dlt.sh
 # Output: "No baseline found - this test will be saved as baseline"
 
 # Run 2: Compares against baseline
-./dlt.sh
+bin/dlt.sh
 # Output: "Baseline: ./baselines/production_baseline_Dynamic_20250108.csv"
 #         "Verdict: ✅ No significant change"
 ```
@@ -1356,7 +1359,7 @@ rm -rf baselines/production_baseline_Dynamic_*.csv
 rm -rf baselines/*.csv
 
 # Next run creates fresh baseline
-./dlt.sh
+bin/dlt.sh
 ```
 
 **When to Update Baselines:**
@@ -1403,7 +1406,7 @@ echo "APP_ENV=production" > .env
 echo "STATIC_PAGE=https://prod.example.com/" >> .env
 
 # Re-run test
-./dlt.sh
+bin/dlt.sh
 
 # Verify baselines are now in correct location
 ls -la baselines/
@@ -1449,7 +1452,7 @@ cat load_test_reports_*/system_metrics.csv
 # Solution: Run tests during off-peak hours
 # Use 'cron' to schedule tests:
 crontab -e
-# Add: 0 2 * * * cd /path/to/resilio && ./dlt.sh
+# Add: 0 2 * * * cd /path/to/resilio && bin/dlt.sh
 ```
 
 **2. Sample Size Too Small**
@@ -1543,7 +1546,7 @@ Failed requests:    100
 TEST_TIMEOUT=60  # Increased from 30 seconds
 
 # Or set via environment variable (slt.sh only)
-AB_TIMEOUT=60 ./slt.sh
+AB_TIMEOUT=60 bin/slt.sh
 ```
 
 **2. Reduce Concurrency**
@@ -1553,7 +1556,7 @@ AB_TIMEOUT=60 ./slt.sh
 AB_CONCURRENCY=25  # Reduced from 50
 
 # Or for slt.sh:
-AB_CONCURRENCY=5 ./slt.sh
+AB_CONCURRENCY=5 bin/slt.sh
 ```
 
 **3. Check Application Health**
@@ -1698,7 +1701,7 @@ ulimit -n
 
 ```bash
 ulimit -n 10000
-./dlt.sh
+bin/dlt.sh
 ```
 
 **2. Permanent Fix (user-level)**
@@ -1761,7 +1764,45 @@ sudo systemctl restart php-fpm
 
 ---
 
-### Issue 8: Script Hangs / No Progress
+### Issue 8: Python Engine Failures (DLT Only)
+
+**Symptom**: DLT hangs or fails during the "Analysis & Reporting" phase.
+
+**Root Cause**: The Python-based math engine (`lib/stats.py`) is missing or cannot be executed.
+
+**Investigation Steps:**
+
+1. **Verify Python 3 is installed**
+   ```bash
+   python3 --version
+   # Should be 3.10 or higher
+   ```
+
+2. **Check for missing standard libraries**
+   Resilio uses only standard Python libraries (`math`, `statistics`, `json`, `sys`). Ensure your Python installation isn't "minimal" (e.g., in some Alpine-based Docker images).
+
+3. **Check Execution Permissions**
+   ```bash
+   ls -l lib/stats.py
+   # Should have executable bits: -rwxr-xr-x
+   chmod +x lib/stats.py
+   ```
+
+4. **Run Python Stats Manually**
+   ```bash
+   python3 lib/stats.py --help
+   # Should display usage information
+   ```
+
+5. **Python 3 vs Python**
+   Resilio explicitly calls `python3`. If your system only has `python` (and it's v3), create a symlink:
+   ```bash
+   sudo ln -s /usr/bin/python /usr/bin/python3
+   ```
+
+---
+
+### Issue 9: Script Hangs / No Progress
 
 **Symptom**: Script runs but shows no output for extended period (> 5 minutes with no updates).
 
@@ -1871,7 +1912,7 @@ watch -n 5 'ps aux | grep -E "(dlt|ab)" | grep -v grep'
 
 # Set up automated timeout
 # Run test with overall timeout:
-timeout 2h ./dlt.sh
+timeout 2h bin/dlt.sh
 ```
 
 ---
@@ -1885,6 +1926,7 @@ timeout 2h ./dlt.sh
 ```bash
 # 1. Required tools installed
 command -v ab >/dev/null 2>&1 || { echo "ab not installed"; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 not installed"; exit 1; }
 command -v bc >/dev/null 2>&1 || { echo "bc not installed"; exit 1; }
 command -v awk >/dev/null 2>&1 || { echo "awk not installed"; exit 1; }
 
@@ -1965,7 +2007,7 @@ echo deadline | sudo tee /sys/block/sda/queue/scheduler
 **Terminal 1: Run Test**
 
 ```bash
-./dlt.sh
+bin/dlt.sh
 ```
 
 **Terminal 2: Monitor Application Logs**
@@ -2071,7 +2113,7 @@ Create a test report document:
 Validate that adding database indexes improves API response time without introducing regressions.
 
 ## Test Configuration
-- **Tool:** Resilio DLT v6.0
+- **Tool:** Resilio DLT v6.2
 - **Iterations:** 1000 (50 warmup + 100 rampup + 850 sustained)
 - **Concurrency:** 50 concurrent users
 - **Duration:** ~120 minutes
@@ -2226,7 +2268,7 @@ cat > test_hypothesis.md << 'EOF'
 Adding index on users.email will improve /api/users endpoint by 20-30%.
 
 ## Test Plan
-- Tool: Resilio DLT v6.0
+- Tool: Resilio DLT v6.2
 - Baseline: commit xyz789 (established 2025-01-05)
 - Test: commit a3f9d8c (with index added)
 - Expected p-value: < 0.05
@@ -2296,13 +2338,13 @@ git commit -m "docs: preregister performance test hypothesis"
 # Start small and increase gradually
 
 # Phase 1: Smoke test (1 user)
-AB_CONCURRENCY=1 AB_REQUESTS=10 ./slt.sh
+AB_CONCURRENCY=1 AB_REQUESTS=10 bin/slt.sh
 
 # Phase 2: Light load (5 users)
-AB_CONCURRENCY=5 AB_REQUESTS=50 ./slt.sh
+AB_CONCURRENCY=5 AB_REQUESTS=50 bin/slt.sh
 
 # Phase 3: Moderate load (10 users)
-AB_CONCURRENCY=10 AB_REQUESTS=100 ./slt.sh
+AB_CONCURRENCY=10 AB_REQUESTS=100 bin/slt.sh
 
 # Monitor between each phase
 # Only proceed if:
@@ -2315,7 +2357,7 @@ AB_CONCURRENCY=10 AB_REQUESTS=100 ./slt.sh
 
 ```bash
 # Terminal 1: Run test
-./slt.sh
+bin/slt.sh
 
 # Terminal 2: Monitor application metrics
 watch -n 5 'curl -s https://api.example.com/metrics'
@@ -2363,7 +2405,7 @@ ps aux | grep slt
 # Identical infrastructure, isolated from real traffic
 
 echo "DYNAMIC_PAGE=https://prod-replica.example.com/api/users" > .env
-./dlt.sh
+bin/dlt.sh
 ```
 
 **2. Staging with Production Data**
@@ -2371,7 +2413,7 @@ echo "DYNAMIC_PAGE=https://prod-replica.example.com/api/users" > .env
 ```bash
 # Use staging environment with production database snapshot
 pg_dump production_db | psql staging_db
-./dlt.sh
+bin/dlt.sh
 ```
 
 **3. Synthetic Monitoring**
@@ -2405,49 +2447,49 @@ pg_dump production_db | psql staging_db
 # ========================================
 
 # Default test (1000 iterations)
-./slt.sh
+bin/slt.sh
 
 # Quick test (100 iterations)
-ITERATIONS=100 ./slt.sh
+ITERATIONS=100 bin/slt.sh
 
 # Heavy load test
-ITERATIONS=2000 AB_REQUESTS=500 AB_CONCURRENCY=50 ./slt.sh
+ITERATIONS=2000 AB_REQUESTS=500 AB_CONCURRENCY=50 bin/slt.sh
 
 # ========================================
 # Performance Scenarios
 # ========================================
 
 # Light testing (development)
-ITERATIONS=100 AB_REQUESTS=50 AB_CONCURRENCY=5 ./slt.sh
+ITERATIONS=100 AB_REQUESTS=50 AB_CONCURRENCY=5 bin/slt.sh
 
 # Medium testing (staging)
-ITERATIONS=500 AB_REQUESTS=200 AB_CONCURRENCY=20 ./slt.sh
+ITERATIONS=500 AB_REQUESTS=200 AB_CONCURRENCY=20 bin/slt.sh
 
 # Heavy testing (pre-production)
-ITERATIONS=1000 AB_REQUESTS=500 AB_CONCURRENCY=50 ./slt.sh
+ITERATIONS=1000 AB_REQUESTS=500 AB_CONCURRENCY=50 bin/slt.sh
 
 # Stress testing
-ITERATIONS=2000 AB_REQUESTS=1000 AB_CONCURRENCY=100 ./slt.sh
+ITERATIONS=2000 AB_REQUESTS=1000 AB_CONCURRENCY=100 bin/slt.sh
 
 # ========================================
 # Timeout Adjustments
 # ========================================
 
 # Long timeout (slow endpoints)
-AB_TIMEOUT=60 ./slt.sh
+AB_TIMEOUT=60 bin/slt.sh
 
 # Short timeout (fast endpoints)
-AB_TIMEOUT=10 ./slt.sh
+AB_TIMEOUT=10 bin/slt.sh
 
 # ========================================
 # Combined Parameters
 # ========================================
 
 # API stress test
-ITERATIONS=1500 AB_REQUESTS=1000 AB_CONCURRENCY=100 AB_TIMEOUT=30 ./slt.sh
+ITERATIONS=1500 AB_REQUESTS=1000 AB_CONCURRENCY=100 AB_TIMEOUT=30 bin/slt.sh
 
 # Quick smoke test
-ITERATIONS=50 AB_REQUESTS=20 AB_CONCURRENCY=5 AB_TIMEOUT=10 ./slt.sh
+ITERATIONS=50 AB_REQUESTS=20 AB_CONCURRENCY=5 AB_TIMEOUT=10 bin/slt.sh
 
 # ========================================
 # Output Management
@@ -2475,15 +2517,15 @@ ls -dt load_test_results_* | tail -n +6 | xargs rm -rf
 
 # Production test (Git-tracked baselines)
 echo "APP_ENV=production" > .env
-./dlt.sh
+bin/dlt.sh
 
 # Local development test (local baselines)
 echo "APP_ENV=local" > .env
-./dlt.sh
+bin/dlt.sh
 
 # Staging test
 echo "APP_ENV=staging" > .env
-./dlt.sh
+bin/dlt.sh
 
 # ========================================
 # Result Analysis
@@ -2540,7 +2582,7 @@ git commit -m "chore: update performance baseline for v2.0"
 git push
 
 # Tag baseline for release
-git tag -a v2.0-baseline -m "Performance baseline for v2.0"
+git tag -a v6.2.0-baseline -m "Performance baseline for v6.2.0"
 git push --tags
 
 # ========================================
@@ -2721,7 +2763,7 @@ timeout $TEST_TIMEOUT ab -H "Authorization: Bearer YOUR_TOKEN" \
 
 ```bash
 # slt.sh: Use environment variable
-AB_TIMEOUT=60 ./slt.sh
+AB_TIMEOUT=60 bin/slt.sh
 
 # dlt.sh: Edit script line ~72
 TEST_TIMEOUT=60  # Change from 30
@@ -2731,7 +2773,7 @@ TEST_TIMEOUT=60  # Change from 30
 
 ```bash
 # slt.sh: Use environment variable
-AB_CONCURRENCY=100 ./slt.sh
+AB_CONCURRENCY=100 bin/slt.sh
 
 # dlt.sh: Edit script line ~71
 AB_CONCURRENCY=100  # Change from 50
@@ -2785,6 +2827,8 @@ AB_CONCURRENCY=100  # Change from 50
 
 **Warm-up**: DLT phase to prime application (JIT, caches, connection pools)
 
-**Welch's t-test**: Statistical test for comparing two groups with unequal variances
+**Mann-Whitney U test**: Non-parametric statistical test used for non-normal or skewed distributions.
+
+**Welch's t-test**: Parametric statistical test for comparing two groups with unequal variances.
 
 

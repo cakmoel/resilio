@@ -3,9 +3,9 @@
 **High-Performance Load Testing Suite for Web Durability and Speed**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.2-green.svg)](CHANGELOG.md)
-[![DLT Engine](https://img.shields.io/badge/DLT-v6.2-brightgreen.svg)](dlt.sh)
-[![SLT Engine](https://img.shields.io/badge/SLT-v2.0-blue.svg)](slt.sh)
+[![Version](https://img.shields.io/badge/version-6.2.0-green.svg)](CHANGELOG.md)
+[![DLT Engine](https://img.shields.io/badge/DLT-v6.2.0-brightgreen.svg)](bin/dlt.sh)
+[![SLT Engine](https://img.shields.io/badge/SLT-v2.1-blue.svg)](bin/slt.sh)
 ![CI](https://github.com/cakmoel/resilio/actions/workflows/ci.yml/badge.svg)
 
 
@@ -107,7 +107,7 @@ v6.2 introduces a **consolidated Python-based math engine**, resolving the "offl
 
 ## Core Engines
 
-### Resilio SLT (Simple Load Testing) - `slt.sh` v2.0
+### Resilio SLT (Simple Load Testing) - `bin/slt.sh` v2.1 (Suite v6.2)
 
 The **SLT engine** is optimized for agile development cycles and rapid feedback. Perfect for:
 
@@ -172,7 +172,7 @@ The **DLT engine** is a research-grade powerhouse designed for rigorous statisti
 | Initial benchmarking | ✅ | ❌ |
 | Production baseline | ❌ | ✅ |
 | Statistical validation | ❌ | ✅ |
-| **Tail latency testing (P95/P99)** | ❌ | ✅ **(v6.1 excels!)** |
+| **Tail latency testing (P95/P99)** | ❌ | ✅ **(v6.2 excels!)** |
 | Regression detection | ❌ | ✅ |
 | Capacity planning | ❌ | ✅ |
 | SLA validation | ❌ | ✅ |
@@ -203,14 +203,13 @@ Resilio works with **any web technology** because it tests via HTTP protocol:
 
 ### Prerequisites
 
-**Required:**
-- Bash 4.0+
-- ApacheBench (ab)
-- bc (basic calculator)
-- GNU coreutils (awk, grep, sort)
-
-**Optional:**
-- Git (for baseline version control)
+- **Python 3.10+** (Mandatory for DLT math engine)
+- **ApacheBench (ab)** (Standard `apache2-utils`)
+- **Bash 4.4+**
+- **bc** (Arbitrary precision calculator)
+- **GNU Coreutils** (`awk`, `grep`, `sed`, `sort`, `uniq`)
+- **Git** (For baseline version control)
+- **curl** (For system metric validation)
 - iostat (for system monitoring)
 
 **Installation:**
