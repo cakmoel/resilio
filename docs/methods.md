@@ -1,8 +1,3 @@
-Below is a **paper-ready “Methods” section**, written in a **neutral IEEE / ACM style**, suitable for submission or as a technical appendix.
-No marketing language, no assumptions, no over-claims.
-
----
-
 # Methods
 
 ## Experimental Design
