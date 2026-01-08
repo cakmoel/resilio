@@ -6,7 +6,7 @@
 [![Version](https://img.shields.io/badge/version-6.1-green.svg)](CHANGELOG.md)
 [![DLT Engine](https://img.shields.io/badge/DLT-v6.1-brightgreen.svg)](dlt.sh)
 [![SLT Engine](https://img.shields.io/badge/SLT-v2.0-blue.svg)](slt.sh)
-![CI](https://github.com/<user>/<repo>/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/cakmoel/resilio/actions/workflows/ci.yml/badge.svg)
 
 
 ---
