@@ -283,7 +283,7 @@ Average response times mask the "long tail" of user dissatisfaction. Resilio foc
 - Network jitter
 - Database query variance
 
-**New in v6.1:** Mann-Whitney U test is specifically designed for tail latency metrics, providing more accurate detection of regressions in P95/P99 values.
+**New in v6.2:** Mann-Whitney U test is specifically designed for tail latency metrics, providing more accurate detection of regressions in P95/P99 values.
 
 ### 2. Stability Measurement (Coefficient of Variation)
 
@@ -305,7 +305,7 @@ Adheres to the **USE Method** (Utilization, Saturation, Errors):
 
 ### 4. Statistical Hypothesis Testing (DLT Only)
 
-**New in v6.1:** Automatic test selection between two methods:
+**New in v6.2:** Automatic test selection between two methods:
 
 #### Welch's t-test (Parametric)
 **Used when:** Data is approximately normal (|skewness| < 1.0 AND |kurtosis| < 2.0)
@@ -389,16 +389,16 @@ load_test_reports_YYYYMMDD_HHMMSS/
 
 **Key Metrics:**
 - **Mean with 95% CI**: Statistical accuracy bounds
-- **Statistical Test Used**: Shows which test was automatically selected (v6.1)
+- **Statistical Test Used**: Shows which test was automatically selected (v6.2)
 - **Test Statistic**: t-value (Welch's) or U-value (Mann-Whitney)
 - **p-value**: Statistical significance
 - **Effect Size**: Cohen's d or rank-biserial r
 - **Verdict**: Regression/Improvement/No Change
-- **Distribution Characteristics**: Skewness and kurtosis (v6.1)
+- **Distribution Characteristics**: Skewness and kurtosis (v6.2)
 
 ---
 
-### Example: Enhanced v6.1 Report
+### Example: Enhanced v6.2 Report
 
 ```markdown
 ### API_Endpoint
@@ -513,7 +513,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y apache2-utils bc sysstat
       
-      - name: Run Load Test (v6.1 with automatic test selection)
+      - name: Run Load Test (v6.2 with automatic test selection)
         run: |
           chmod +x dlt.sh
           ./dlt.sh
@@ -529,7 +529,7 @@ jobs:
             exit 1
           fi
           
-          # v6.1: Also check which test was used
+          # v6.2: Also check which test was used
           echo "Statistical Test Summary:"
           echo "$REPORT" | grep "Test Used:"
       
@@ -553,7 +553,7 @@ jobs:
 4. **Disable rate limiting** temporarily during tests
 5. **Monitor application logs** during test execution
 
-### Interpreting Results (Updated for v6.1)
+### Interpreting Results (Updated for v6.2)
 
 1. **Focus on percentiles**: P95/P99 matter more than averages
 2. **Check CV first**: High CV = unstable system
@@ -563,7 +563,7 @@ jobs:
 6. **Inspect distribution characteristics** (v6.1): High skewness/kurtosis indicates need for non-parametric tests
 7. **Document test conditions**: Note system state, data volume, background jobs
 
-### When to Trust Mann-Whitney U Results (v6.1)
+### When to Trust Mann-Whitney U Results (v6.2)
 
 Mann-Whitney U test is **more reliable** than Welch's t-test when:
 - Testing P95/P99 latencies (almost always non-normal)
@@ -649,26 +649,28 @@ ulimit -n 10000
 
 ---
 
-## Upgrading from v6.0 to v6.1
+---
+
+## Upgrading from v6.1 to v6.2
 
 ### Migration Guide
 
 -  **Zero-Risk Upgrade - 100% Backward Compatible**
 
 ```bash
-# 1. Backup v6.0 (optional - recommended)
-cp dlt.sh dlt_v6.0_backup.sh
+# 1. Backup v6.1 (optional - recommended)
+cp dlt.sh dlt_v6.1_backup.sh
 
-# 2. Replace with v6.1
+# 2. Replace with v6.2
 # Download new dlt.sh from repository
 chmod +x dlt.sh
 
-# 3. Test (works identically to v6.0)
+# 3. Test (works identically to v6.1)
 ./dlt.sh
 
 # 4. Check enhanced features
 cat load_test_reports_*/hypothesis_testing_*.md
-# Look for "Test Used:" section (new in v6.1)
+# Look for "Test Used:" section (new in v6.2)
 ```
 
 ### What Changed
@@ -678,9 +680,10 @@ cat load_test_reports_*/hypothesis_testing_*.md
 -  Baseline file format
 -  Environment variables
 -  Report locations
--  All v6.0 functionality
+-  All v6.1 functionality
 
 **Enhanced (automatic improvements):**
+-  Python-powered math engine (40x faster)
 -  Better accuracy for tail latencies
 -  Robust handling of outliers
 -  Distribution analysis in reports
@@ -692,47 +695,49 @@ cat load_test_reports_*/hypothesis_testing_*.md
 
 ## Documentation
 
-- **[USAGE_GUIDE.md](USAGE_GUIDE.md)** - Comprehensive usage guide with real-world scenarios
-- **[REFERENCES.md](REFERENCES.md)** - Academic and research references (updated for v6.1)
+- **[USAGE_GUIDE.md](docs/USAGE_GUIDE.md)** - Comprehensive usage guide with real-world scenarios
+- **[REFERENCES.md](docs/REFERENCES.md)** - Academic and research references (updated for v6.2)
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
-- **[Performance Methodology Gist](https://gist.github.com/cakmoel/2dbc49121058b3549904a35d33184fe2)** - Mathematical formulas and ISO 25010 compliance
+- **[Performance Methodology](docs/methodology.md)** - Mathematical formulas and ISO 25010 compliance
 
 ---
 
 ## Research Foundations
 
-Resilio v6.1 implements methodologies from:
+Resilio v6.2 implements methodologies from:
 
-### Original Foundations (v6.0)
+### Original Foundations (v6.0 & v6.1)
 - **Jain, R. (1991)** - Statistical methods for performance measurement
 - **Welch, B. L. (1947)** - Unequal variance t-test
 - **Cohen, J. (1988)** - Effect size interpretation
 - **ISO/IEC 25010:2011** - Performance efficiency metrics
 - **Barford & Crovella (1998)** - Workload characterization
 - **Gunther, N. J. (2007)** - Queueing theory and capacity planning
-
-### New in v6.1
 - **Mann, H. B., & Whitney, D. R. (1947)** - Non-parametric rank-based comparison
 - **Wilcoxon, F. (1945)** - Rank-sum test theoretical foundation
 - **D'Agostino, R. B. (1971)** - Normality testing via skewness and kurtosis
 - **Kerby, D. S. (2014)** - Rank-biserial correlation for effect size
 
+### New in v6.2
+- **Ruxton, G. D. (2006)** - The unequal variance t-test is an underused substitution for Student's t-test and the Mann-Whitney U test.
+
 ---
 
 ## Version Comparison
 
-| Feature | v5.1 | v6.0 | v6.1 |
+| Feature | v6.0 | v6.1 | v6.2 |
 |---------|------|------|------|
-| Welch's t-test | ❌ | ✅ | ✅ |
-| Mann-Whitney U | ❌ | ❌ | ✅ |
-| Automatic test selection | ❌ | ❌ | ✅ |
-| Normality checking | ❌ | ❌ | ✅ |
-| Cohen's d | ❌ | ✅ | ✅ |
-| Rank-biserial r | ❌ | ❌ | ✅ |
-| Baseline management | ❌ | ✅ | ✅ |
-| Smart locale detection | ❌ | ✅ | ✅ |
-| Best for tail latencies | ⚠️ | ⚠️ | ✅ |
-| Handles outliers | ⚠️ | ⚠️ | ✅ |
+| Welch's t-test | ✅ | ✅ | ✅ |
+| Mann-Whitney U | ❌ | ✅ | ✅ |
+| Automatic test selection | ❌ | ✅ | ✅ |
+| Normality checking | ❌ | ✅ | ✅ |
+| Cohen's d | ✅ | ✅ | ✅ |
+| Rank-biserial r | ❌ | ✅ | ✅ |
+| Baseline management | ✅ | ✅ | ✅ |
+| Smart locale detection | ✅ | ✅ | ✅ |
+| Python Math Engine (40x) | ❌ | ❌ | ✅ |
+| Best for tail latencies | ⚠️ | ✅ | ✅ |
+| Handles outliers | ⚠️ | ✅ | ✅ |
 
 ---
 
@@ -788,6 +793,6 @@ If you use Resilio in academic research, please cite:
 
 ---
 
-**Resilio v6.1: Built for Speed, Tested for Durability, Proven by Science**
+**Resilio v6.2: Built for Speed, Tested for Durability, Proven by Science**
 
 *Now with automatic statistical test selection for maximum accuracy.*
