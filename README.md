@@ -137,13 +137,13 @@ The **DLT engine** is a research-grade powerhouse designed for rigorous statisti
 
 **Key Features:**
 
-#### Statistical Testing (Enhanced in v6.1)
-- ✨ **Automatic test selection** - Chooses best method for your data
-- ✨ **Mann-Whitney U test** - Robust for non-normal distributions
-- ✅ **Welch's t-test** - Powerful for normal distributions
-- ✨ **Normality checking** - Skewness and kurtosis analysis
-- ✅ **Effect size calculation** - Cohen's d and rank-biserial correlation
-- ✅ **95% confidence intervals** - Statistical accuracy bounds
+#### Statistical Testing (new in v6.1)
+- **Automatic test selection** - Chooses best method for your data
+- **Mann-Whitney U test** - Robust for non-normal distributions
+- **Welch's t-test** - Powerful for normal distributions
+- **Normality checking** - Skewness and kurtosis analysis
+- **Effect size calculation** - Cohen's d and rank-biserial correlation
+- **95% confidence intervals** - Statistical accuracy bounds
 
 #### Test Execution
 - Three-phase execution (Warm-up → Ramp-up → Sustained)
@@ -651,7 +651,7 @@ ulimit -n 10000
 
 ### Migration Guide
 
-**✅ Zero-Risk Upgrade - 100% Backward Compatible**
+-  **Zero-Risk Upgrade - 100% Backward Compatible**
 
 ```bash
 # 1. Backup v6.0 (optional - recommended)
@@ -672,17 +672,17 @@ cat load_test_reports_*/hypothesis_testing_*.md
 ### What Changed
 
 **Same (100% compatible):**
-- ✅ CLI commands
-- ✅ Baseline file format
-- ✅ Environment variables
-- ✅ Report locations
-- ✅ All v6.0 functionality
+-  CLI commands
+-  Baseline file format
+-  Environment variables
+-  Report locations
+-  All v6.0 functionality
 
 **Enhanced (automatic improvements):**
-- ✨ Better accuracy for tail latencies
-- ✨ Robust handling of outliers
-- ✨ Distribution analysis in reports
-- ✨ Automatic optimal test selection
+-  Better accuracy for tail latencies
+-  Robust handling of outliers
+-  Distribution analysis in reports
+-  Automatic optimal test selection
 
 **No configuration changes needed!**
 
