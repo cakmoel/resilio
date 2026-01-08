@@ -2,22 +2,26 @@
 
 ## Performance Analysis & Benchmarking Methodology
 
-### Foundational Texts
+Resilio v6.2 implements methodologies from:
 
-**Jain, R.** (1991). *The Art of Computer Systems Performance Analysis: Techniques for Experimental Design, Measurement, Simulation, and Modeling*. Wiley-Interscience.
-- Chapter 3: Statistical Methods for Performance Measurement
-- Section 3.3.1: Confidence Interval Calculations
-- Section 5.2.2: Percentile Analysis for Tail Latency Assessment
+### Original Foundations (v6.0)
+- **Jain, R. (1991)** - Statistical methods for performance measurement
+- **Welch, B. L. (1947)** - Unequal variance t-test
+- **Cohen, J. (1988)** - Effect size interpretation
+- **ISO/IEC 25010:2011** - Performance efficiency metrics
+- **Barford & Crovella (1998)** - Workload characterization
+- **Gunther, N. J. (2007)** - Queueing theory and capacity planning
 
-**Gunther, N. J.** (2007). *Guerrilla Capacity Planning: A Tactical Approach to Planning for Highly Scalable Applications and Services*. Springer-Verlag.
-- Chapter 4: Performance Metrics and Measurement Frameworks
-- Little's Law Validation for Concurrency Calculations
-- Queueing Theory Applications in Distributed Systems
+### New in v6.1 & v6.2
+- **Mann, H. B., & Whitney, D. R. (1947)** - Non-parametric rank-based comparison
+- **Wilcoxon, F. (1945)** - Rank-sum test theoretical foundation
+- **D'Agostino, R. B. (1971)** - Normality testing via skewness and kurtosis
+- **Kerby, D. S. (2014)** - Rank-biserial correlation for effect size
+- **Ruxton, G. D. (2006)** - The unequal variance t-test is an underused alternative to Student's t-test and the Mann–Whitney U test
 
 **Menascé, D. A., Almeida, V. A. F., & Dowdy, L. W.** (1994). *Capacity Planning and Performance Modeling: From Mainframes to Client-Server Systems*. Prentice Hall PTR.
 - Chapter 7: Workload Characterization Techniques
 - Multi-Phase Testing Methodology
-- Statistical Significance Requirements in Performance Studies
 
 **Lilja, D. J.** (2005). *Measuring Computer Performance: A Practitioner's Guide*. Cambridge University Press.
 - Chapter 4: Statistical Analysis of Performance Data

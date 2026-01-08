@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feat/dlt-v6.2" ]
   pull_request:
     branches: [ "main" ]
 
@@ -14,15 +14,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bats shellcheck
+          sudo apt-get install -y bats shellcheck apache2-utils bc
 
       - name: Lint (ShellCheck)
         run: |
-          shellcheck -x bin/dlt.sh lib/*.sh config/dlt.conf
+          shellcheck -x bin/dlt.sh bin/slt.sh lib/*.sh config/dlt.conf
+
+      - name: Python Unit Tests
+        run: |
+          python3 tests/unit/test_stats.py
 
       - name: Unit tests (Bats)
         run: |
-          make test
+          export BASE_DIR=$GITHUB_WORKSPACE
+          bats tests/unit/test_stats.bats

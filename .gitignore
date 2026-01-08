@@ -1,12 +1,10 @@
-# Deep Load Testing - Git Ignore Configuration
-# Version: 6.2
-
 # ARCHIVES & RELEASES
 *.tar.gz
 *.zip
 *.tgz
-
-# PYTHON
+resilio-v*.tar.gz
+resilio-v*.zip
+release_commands.sh
 __pycache__/
 *.pyc
 *.pyo

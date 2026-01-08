@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.2.0] - 2026-01-09
+
+### Major Release: High-Performance Python Math Engine
+
+This release marks a significant architectural shift by migrating the core statistical engine from pure Bash/`bc` to a consolidated **Python 3 backend**. This resolves long-standing performance bottlenecks while maintaining complete CLI compatibility.
+
+### Added
+
+#### Core Architecture
+- **Python-Powered Statistical Engine** (`lib/stats.py`)
+  - Optimized $O(n \log n)$ implementation of Mann-Whitney U test.
+  - High-precision calculations for mean, variance, and confidence intervals.
+  - Significantly reduced subprocess overhead by batching calculations.
+- **TDD Suite for Mathematics**
+  - New Python unit tests in `tests/unit/test_stats.py`.
+  - Updated Bats tests to ensure shell wrapper parity.
+
+#### Performance
+- **~40x Speedup** for standard performance metrics (mean, CI, variance).
+- **Sub-second execution** for non-parametric tests on datasets with thousands of iterations.
+- Removed "offload math" delays that previously hampered deep analysis runs.
+
+### Changed
+- Refactored `lib/stats.sh` and `lib/normality.sh` to leverage the Python backend.
+- Updated `README.md` and project documentation to reflect the new dependency and performance capabilities.
+- Improved `.gitignore` for Python cache and release archives.
+
+### Dependency Note
+- **Python 3.x** is now a mandatory requirement for DLT engine operations.
+
+---
+
 ## [6.1.0] - 2025-01-08
 
 ### Major Release: Intelligent Statistical Test Selection

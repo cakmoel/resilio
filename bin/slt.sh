@@ -5,10 +5,11 @@
 # Author: M.Noermoehammad
 # Improved Simple Load Testing(slt) Script
 # License: MIT License
-# Version: 2.0
+# Version: 6.2 (SLT v2.1)
 # 
-# Improvements over v1.0:
-# - Maintains original simple logic and workflow
+# Improvements over v2.0:
+# - Synchronized with Resilio Suite v6.2
+# - Maintained original simple logic and workflow
 # - Adds error tracking without breaking existing calculations
 # - Preserves output to file for audit trail
 # - Adds percentile calculations (P50, P95, P99)
