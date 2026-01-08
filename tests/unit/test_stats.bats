@@ -2,7 +2,8 @@
 
 setup() {
   export CONF_Z=1.96
-  export BASE_DIR="/var/www/html/load-tester"
+  # Use provided BASE_DIR or detect relative to test file
+  export BASE_DIR="${BASE_DIR:-$(cd "$BATS_TEST_DIRNAME/../.." && pwd)}"
 }
 
 @test "mean calculation is correct" {

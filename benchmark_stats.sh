@@ -1,11 +1,11 @@
 #!/bin/bash
-BASE_DIR="/var/www/html/load-tester"
-source /var/www/html/load-tester/lib/stats.sh
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${BASE_DIR}/lib/stats.sh"
 
 # Generate 1000 test values
 declare -a data1
 declare -a data2
-for i in {1..1000}; do
+for _ in {1..1000}; do
     data1+=("$RANDOM")
     data2+=("$RANDOM")
 done
