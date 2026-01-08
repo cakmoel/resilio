@@ -782,7 +782,7 @@ If you use Resilio in academic research, please cite:
   author = {Noermoehammad, M.},
   title = {Resilio: Research-Based Performance Testing Suite},
   year = {2025},
-  version = {6.1},
+  version = {6.2},
   url = {https://github.com/cakmoel/resilio}
 }
 ```
