@@ -9,6 +9,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+docs/WHITE_PAPER.md
 
 ## =============================================================================
 # TEST REPORTS (Always local)
