@@ -58,7 +58,9 @@ EOF
 
         append_metric_row() {
             local label="$1" data="$2"
-            IFS='|' read -r m med sd min max p90 p95 p99 cil ciu <<< "$(calculate_statistics "$data")"
+            # The `_` variable is already used as a placeholder for an unused field.
+            # All other variables (m, med, sd, min, max, p95, p99, cil, ciu) are used in the echo statement.
+            IFS='|' read -r m med sd min max _p50 p95 p99 cil ciu <<< "$(calculate_statistics "$data")"
             echo "| **$label** | $m | $med | $sd | $min | $max | $p95 | $p99 | $cil | $ciu |" >> "$REPORT_FILE"
         }
 
@@ -71,10 +73,12 @@ EOF
 
         local total_iters=$((RAMPUP_ITERATIONS + SUSTAINED_ITERATIONS))
         local failed=${ERROR_COUNTS[$scenario]}
-        local error_rate=$(echo "scale=4; ($failed / $total_iters) * 100" | bc -l)
-        local success_rate=$(echo "scale=4; 100 - $error_rate" | bc -l)
+        local error_rate success_rate
+        error_rate=$(echo "scale=4; ($failed / $total_iters) * 100" | bc -l)
+        success_rate=$(echo "scale=4; 100 - $error_rate" | bc -l)
         local total_reqs=$((total_iters * AB_REQUESTS))
-        local sample_size=$(echo "${RPS_VALUES[$scenario]}" | wc -w)
+        local sample_size
+        sample_size=$(echo "${RPS_VALUES[$scenario]}" | wc -w)
 
         cat >> "$REPORT_FILE" << EOF
 
@@ -114,7 +118,8 @@ EOF
         # Calling Python hypothesis_test once and getting all metrics
         output=$( { printf "%s\n" "${baseline_array[@]}"; echo "---"; printf "%s\n" "${candidate_array[@]}"; } | "$STATS_PY" hypothesis_test )
         
-        IFS='|' read -r test_used stat score p_value status effect b_norm c_norm <<< "$output"
+        local test_used p_value effect b_norm c_norm interpretation
+        IFS='|' read -r test_used _ _ p_value _ effect b_norm c_norm <<< "$output"
         
         interpretation=$(interpret_effect_size "$effect")
         

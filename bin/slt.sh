@@ -66,19 +66,20 @@ run_ab_test() {
     local temp_file="${OUTPUT_DIR}/raw_${scenario}_${iteration}.txt"
     
     # Run 'ab' with timeout and capture full output
-    if timeout $AB_TIMEOUT ab -n $AB_REQUESTS -c $AB_CONCURRENCY "$url" > "$temp_file" 2>&1; then
+    if timeout "$AB_TIMEOUT" ab -n "$AB_REQUESTS" -c "$AB_CONCURRENCY" "$url" > "$temp_file" 2>&1; then
         # Check if 'ab' returned a valid requests per second value
         if grep -q "Requests per second:" "$temp_file"; then
-            local rps=$(grep "Requests per second:" "$temp_file" | awk '{print $4}')
+            local rps time_per_req failed p50 p95 p99
+            rps=$(grep "Requests per second:" "$temp_file" | awk '{print $4}')
             
             # Extract additional metrics (non-breaking addition)
-            local time_per_req=$(grep "Time per request:" "$temp_file" | head -1 | awk '{print $4}' || echo "0")
-            local failed=$(grep "Failed requests:" "$temp_file" | awk '{print $3}' || echo "0")
+            time_per_req=$(grep "Time per request:" "$temp_file" | head -1 | awk '{print $4}' || echo "0")
+            failed=$(grep "Failed requests:" "$temp_file" | awk '{print $3}' || echo "0")
             
             # Extract percentiles if available
-            local p50=$(grep -A 10 "Percentage" "$temp_file" | grep "50%" | awk '{print $2}' || echo "0")
-            local p95=$(grep -A 10 "Percentage" "$temp_file" | grep "95%" | awk '{print $2}' || echo "0")
-            local p99=$(grep -A 10 "Percentage" "$temp_file" | grep "99%" | awk '{print $2}' || echo "0")
+            p50=$(grep -A 10 "Percentage" "$temp_file" | grep "50%" | awk '{print $2}' || echo "0")
+            p95=$(grep -A 10 "Percentage" "$temp_file" | grep "95%" | awk '{print $2}' || echo "0")
+            p99=$(grep -A 10 "Percentage" "$temp_file" | grep "99%" | awk '{print $2}' || echo "0")
             
             log_to_file "SUCCESS: $scenario iteration $iteration - RPS: $rps, P95: ${p95}ms"
             
@@ -102,13 +103,14 @@ calculate_statistics() {
     local -n values_ref=$1
     local count=${#values_ref[@]}
     
-    if [ $count -eq 0 ]; then
+    if [ "$count" -eq 0 ]; then
         echo "0|0|0|0|0|0|0|0"
         return
     fi
     
     # Sort values for percentile calculations
-    local sorted=($(printf '%s\n' "${values_ref[@]}" | sort -n))
+    local -a sorted
+    mapfile -t sorted < <(printf '%s\n' "${values_ref[@]}" | sort -n)
     
     # Calculate sum
     local sum=0
@@ -117,24 +119,29 @@ calculate_statistics() {
     done
     
     # Calculate mean (preserves original logic)
-    local mean=$(echo "scale=3; $sum / $count" | bc -l)
+    local mean
+    mean=$(echo "scale=3; $sum / $count" | bc -l)
     
     # Calculate median
     local middle=$((count / 2))
-    if (( count % 2 == 1 )); then
-        local median=${sorted[$middle]}
-    else
-        local median=$(echo "scale=3; (${sorted[$((middle-1))]} + ${sorted[$middle]}) / 2" | bc -l)
-    fi
+        local median
+        if (( count % 2 == 1 )); then
+            median=${sorted[$middle]}
+        else
+            median=$(echo "scale=3; (${sorted[$((middle-1))]} + ${sorted[$middle]}) / 2" | bc -l)
+        fi
     
     # Calculate standard deviation (NEW: stability metric)
-    local variance=0
+    local variance
+    variance=0
     for val in "${sorted[@]}"; do
-        local diff=$(echo "$val - $mean" | bc -l)
+        local diff
+        diff=$(echo "$val - $mean" | bc -l)
         variance=$(echo "$variance + ($diff * $diff)" | bc -l)
     done
     variance=$(echo "scale=3; $variance / $count" | bc -l)
-    local std_dev=$(echo "scale=3; sqrt($variance)" | bc -l)
+    local std_dev
+    std_dev=$(echo "scale=3; sqrt($variance)" | bc -l)
     
     # Calculate percentiles (NEW: tail latency metrics)
     local p50_idx=$((count * 50 / 100))
@@ -185,10 +192,11 @@ main() {
         SUCCESS_COUNTS[$name]=0
     done
     
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
     
     # Loop through the defined number of iterations
-    for (( i=1; i<=$ITERATIONS; i++ )); do
+    for (( i=1; i<=ITERATIONS; i++ )); do
         echo "--- Iteration $i of $ITERATIONS ---"
         
         # Loop through each scenario
@@ -223,8 +231,9 @@ main() {
         fi
     done
     
-    local end_time=$(date +%s)
-    local duration=$((end_time - start_time))
+    local end_time duration
+    end_time=$(date +%s)
+    duration=$((end_time - start_time))
     
     # Generate summary report
     generate_summary_report "$duration"
@@ -260,9 +269,13 @@ EOF
         url=${SCENARIOS[$name]}
         
         # Convert space-separated string to array
+        # shellcheck disable=SC2034
         read -r -a rps_array <<< "${RPS_VALUES[$name]}"
+        # shellcheck disable=SC2034
         read -r -a time_array <<< "${RESPONSE_TIME_VALUES[$name]}"
+        # shellcheck disable=SC2034
         read -r -a p95_array <<< "${P95_VALUES[$name]}"
+        # shellcheck disable=SC2034
         read -r -a p99_array <<< "${P99_VALUES[$name]}"
         
         local success_count=${SUCCESS_COUNTS[$name]}
@@ -276,17 +289,21 @@ EOF
         
         # Calculate statistics (only on successful tests)
         if [ ${#rps_array[@]} -gt 0 ]; then
+            local rps_mean rps_median rps_std rps_min rps_max rps_p50 rps_p95 rps_p99
             IFS='|' read -r rps_mean rps_median rps_std rps_min rps_max rps_p50 rps_p95 rps_p99 <<< \
                 "$(calculate_statistics rps_array)"
             
-            IFS='|' read -r time_mean time_median time_std time_min time_max time_p50 time_p95 time_p99 <<< \
+            local time_mean time_median _time_std _time_min _time_max _time_p50 _time_p95 _time_p99
+            IFS='|' read -r time_mean time_median _time_std _time_min _time_max _time_p50 _time_p95 _time_p99 <<< \
                 "$(calculate_statistics time_array)"
             
-            IFS='|' read -r p95_mean p95_median p95_std p95_min p95_max p95_p50 p95_p95 p95_p99 <<< \
+            local p95_mean _p95_median _p95_std _p95_min _p95_max _p95_p50 _p95_p95 p95_p99
+            IFS='|' read -r p95_mean _p95_median _p95_std _p95_min _p95_max _p95_p50 _p95_p95 p95_p99 <<< \
                 "$(calculate_statistics p95_array)"
             
             # Calculate coefficient of variation (stability indicator)
-            local cv=$(echo "scale=2; $rps_std * 100 / $rps_mean" | bc -l)
+            local cv
+            cv=$(echo "scale=2; $rps_std * 100 / $rps_mean" | bc -l)
             
             # Console output (preserves original format but enhanced)
             echo "   $name"

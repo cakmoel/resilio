@@ -6,7 +6,8 @@ set -euo pipefail
 # =============================================================================
 detect_and_configure_locale() {
     local current_locale="${LC_NUMERIC:-${LC_ALL:-${LANG:-C}}}"
-    local test_decimal=$(printf "%.2f" 3.14 2>/dev/null | cut -d'.' -f2)
+    local test_decimal
+    test_decimal=$(printf "%.2f" 3.14 2>/dev/null | cut -d'.' -f2)
     if [[ "$test_decimal" == "14" ]]; then
         if echo "scale=2; 3.14 * 2" | bc -l &>/dev/null; then
             export LC_NUMERIC="$current_locale"
@@ -35,7 +36,8 @@ BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 detect_environment() {
     local env_file="${BASE_DIR}/.env"
     if [[ -f "$env_file" ]]; then
-        local app_env=$(grep -E '^APP_ENV=' "$env_file" | cut -d'=' -f2 | tr -d '"' | tr -d "'" | tr -d ' ' || echo "")
+        local app_env
+        app_env=$(grep -E '^APP_ENV=' "$env_file" | cut -d'=' -f2 | tr -d '"' | tr -d "'" | tr -d ' ' || echo "")
         if [[ -n "$app_env" ]]; then echo "$app_env"; return 0; fi
     fi
     echo "local"
@@ -77,7 +79,7 @@ COMPARISON_REPORT="${REPORT_DIR}/hypothesis_testing_${TIMESTAMP}.md"
 
 # Initialize logs
 echo "timestamp,cpu_user,cpu_system,memory_used,memory_free,load_1,load_5,load_15,disk_read_kb,disk_write_kb" > "$SYSTEM_METRICS_FILE"
-> "$ERROR_LOG"
+true > "$ERROR_LOG"
 
 log_error() { echo "[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$ERROR_LOG" >&2; }
 log_info() { echo "[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "${REPORT_DIR}/execution.log"; }

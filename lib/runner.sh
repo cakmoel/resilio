@@ -1,11 +1,12 @@
 # shellcheck shell=bash
 
 capture_system_metrics() {
-    local timestamp=$(date +%s)
-    local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
-    local mem_stats=$(free -m | awk 'NR==2{print $3","$4}')
-    local load=$(uptime | awk -F'load average:' '{print $2}' | tr -d ' ' | tr ',' ' ')
-    local disk_io=$(iostat -d -k 1 2 2>/dev/null | tail -1 | awk '{print $3","$4}' || echo "0,0")
+    local timestamp cpu_usage mem_stats load disk_io
+    timestamp=$(date +%s)
+    cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
+    mem_stats=$(free -m | awk 'NR==2{print $3","$4}')
+    load=$(uptime | awk -F'load average:' '{print $2}' | tr -d ' ' | tr ',' ' ')
+    disk_io=$(iostat -d -k 1 2 2>/dev/null | tail -1 | awk '{print $3","$4}' || echo "0,0")
     
     echo "$timestamp,${cpu_usage:-0},0,$mem_stats,$load,$disk_io" >> "$SYSTEM_METRICS_FILE"
 }
@@ -16,15 +17,17 @@ run_research_test() {
     local iteration="$3"
     local concurrency="$4"
     
-    local temp_file="${REPORT_DIR}/raw_data/${scenario}_iter${iteration}_$(date +%s).txt"
+    local temp_file
+    temp_file="${REPORT_DIR}/raw_data/${scenario}_iter${iteration}_$(date +%s).txt"
     
     timeout "$TEST_TIMEOUT" "$AB_BIN" -k -n "$AB_REQUESTS" -c "$concurrency" "$url" > "$temp_file" 2>&1
     
-    local result=$(parse_ab_output "$temp_file" "$scenario")
+    local result
+    result=$(parse_ab_output "$temp_file" "$scenario")
     echo "$result" > "${temp_file}.parsed"
     
     local think_time=$(( (RANDOM % THINK_TIME_MS) + 500 ))
-    sleep $(echo "scale=3; $think_time / 1000" | bc)
+    sleep "$(echo "scale=3; $think_time / 1000" | bc)"
     
     echo "$result"
 }
@@ -33,12 +36,14 @@ save_baseline() {
     local scenario="$1"
     local -n data_ref="$2"
     
-    local baseline_file="${BASELINE_DIR}/${BASELINE_PREFIX}_baseline_${scenario}_$(date +%Y%m%d).csv"
+    local baseline_file
+    baseline_file="${BASELINE_DIR}/${BASELINE_PREFIX}_baseline_${scenario}_$(date +%Y%m%d).csv"
     
     echo "iteration,rps,response_time_ms,p95_ms,p99_ms,connect_ms,processing_ms" > "$baseline_file"
     
     local iteration=1
-    local -a rps_array=($data_ref)
+    local -a rps_array
+    read -ra rps_array <<< "$data_ref"
     for val in "${rps_array[@]}"; do
         echo "$iteration,$val,0,0,0,0,0" >> "$baseline_file"
         ((iteration++))
@@ -55,7 +60,9 @@ save_baseline() {
 
 load_latest_baseline() {
     local scenario="$1"
-    local baseline_file=$(ls -t "${BASELINE_DIR}/${BASELINE_PREFIX}_baseline_${scenario}_"*.csv 2>/dev/null | head -1)
+    local baseline_file
+    # shellcheck disable=SC2012
+    baseline_file=$(ls -t "${BASELINE_DIR}/${BASELINE_PREFIX}_baseline_${scenario}_"*.csv 2>/dev/null | head -1)
     if [[ -z "$baseline_file" ]] || [[ ! -f "$baseline_file" ]]; then echo ""; return 1; fi
     echo "$baseline_file"
     return 0
@@ -65,6 +72,7 @@ load_baseline_data() {
     local baseline_file="$1"
     local metric_column="$2"
     if [[ ! -f "$baseline_file" ]]; then echo ""; return 1; fi
-    local values=$(tail -n +2 "$baseline_file" | cut -d',' -f"$metric_column" | tr '\n' ' ')
+    local values
+    values=$(tail -n +2 "$baseline_file" | cut -d',' -f"$metric_column" | tr '\n' ' ')
     echo "$values"
 }
