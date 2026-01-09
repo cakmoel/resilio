@@ -37,12 +37,22 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 OUTPUT_DIR="./load_test_results_${TIMESTAMP}"
 mkdir -p "$OUTPUT_DIR"
 
+# SCRIPT DIRECTORY
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Define the test scenarios: [Scenario Name]="URL"
-declare -A SCENARIOS=(
-    ["Static"]="STATIC_PAGE"
-    ["Dynamic"]="DYNAMIC_PAGE"
-    ["404_Not_Found"]="404_ERROR"
-)
+# We now source these from lib/workload.sh for consistency
+if [[ -f "${BASE_DIR}/lib/workload.sh" ]]; then
+    source "${BASE_DIR}/lib/workload.sh"
+else
+    # Fallback to local placeholders if config is missing
+    declare -A SCENARIOS=(
+        ["Static"]="STATIC_PAGE"
+        ["Dynamic"]="DYNAMIC_PAGE"
+        ["404_Not_Found"]="404_ERROR"
+    )
+fi
 
 # Initialize error tracking arrays
 declare -A ERROR_COUNTS
