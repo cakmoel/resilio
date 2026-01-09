@@ -68,9 +68,9 @@ Thumbs.db
 .vscode/
 .idea/
 experiments/
-
+.zencoder 
+.zenflow
+.geminiignore
 *.log 
 *.csv 
 *.txt 
-release_commands.sh
-gemini.md
