@@ -4,7 +4,7 @@
 *.tgz
 resilio-v*.tar.gz
 resilio-v*.zip
-release_commands.sh
+release.sh
 __pycache__/
 *.pyc
 *.pyo
