@@ -10,6 +10,7 @@ __pycache__/
 *.pyo
 *.pyd
 docs/WHITE_PAPER.md
+audits/
 
 ## =============================================================================
 # TEST REPORTS (Always local)
@@ -72,3 +73,4 @@ experiments/
 *.csv 
 *.txt 
 release_commands.sh
+gemini.md
