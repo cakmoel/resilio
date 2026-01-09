@@ -4,7 +4,6 @@
 *.tgz
 resilio-v*.tar.gz
 resilio-v*.zip
-release.sh
 __pycache__/
 *.pyc
 *.pyo
@@ -73,4 +72,5 @@ experiments/
 .geminiignore
 *.log 
 *.csv 
-*.txt 
+*.txt
+resilio_performance_methodology.md 

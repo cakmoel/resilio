@@ -18,3 +18,30 @@ select_and_run_test() {
     
     echo "$test_used|$p_val|$effect|$b_norm|$c_norm"
 }
+
+choose_test() {
+    local n="$1"
+    local skew="$2"
+    local kurtosis="$3"
+
+    # Use bc for floating point comparisons
+    if (( $(echo "$n < 30" | bc -l) )); then
+        echo "mann-whitney"
+        return
+    fi
+
+    # Check for absolute value of skew
+    if (( $(echo "($skew > 1.0) || ($skew < -1.0)" | bc -l) )); then
+        echo "mann-whitney"
+        return
+    fi
+
+    # Check for absolute value of kurtosis
+    if (( $(echo "($kurtosis > 2.0) || ($kurtosis < -2.0)" | bc -l) )); then
+        echo "mann-whitney"
+        return
+    fi
+
+    echo "welch"
+}
+
