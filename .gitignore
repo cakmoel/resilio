@@ -4,12 +4,11 @@
 *.tgz
 resilio-v*.tar.gz
 resilio-v*.zip
+release_commands.sh
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-docs/WHITE_PAPER.md
-audits/
 
 ## =============================================================================
 # TEST REPORTS (Always local)
@@ -67,11 +66,10 @@ Thumbs.db
 .vscode/
 .idea/
 experiments/
-.zencoder 
-.zenflow
-.geminiignore
+audits/
+
 *.log 
 *.csv 
-*.txt
+*.txt 
 GEMINI.md
-tests-alternative
+.geminiignore
