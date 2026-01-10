@@ -85,15 +85,6 @@ log_error() { echo "[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$ERROR_LO
 log_info() { echo "[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "${REPORT_DIR}/execution.log"; }
 
 main() {
-    local ALL_ARGS=()
-    for arg in "$@"; do
-        if [[ "$arg" == "--dry-run" ]]; then
-            echo "Dry run requested. Exiting without performing load test."
-            exit 0
-        fi
-        ALL_ARGS+=("$arg")
-    done
-
     echo "========================================="
     echo "RESEARCH-BASED LOAD TESTING v6.2"
     echo "Environment: ${APP_ENV^^}"
