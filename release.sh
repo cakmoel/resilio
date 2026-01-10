@@ -58,6 +58,7 @@ ls -lh \
   LICENSE.md \
   SECURITY.md \
   CODE_OF_CONDUCT.md \
+  CHANGELOG.md \
   CONTRIBUTING.md \
   Makefile \
   .github/workflows/ci.yml
@@ -140,6 +141,7 @@ tar -czf "${ARCHIVE_BASE}.tar.gz" \
   LICENSE.md \
   SECURITY.md \
   CODE_OF_CONDUCT.md \
+  CHANGELOG.md \
   CONTRIBUTING.md \
   .github
 
@@ -153,6 +155,7 @@ zip -r "${ARCHIVE_BASE}.zip" \
   LICENSE.md \
   SECURITY.md \
   CODE_OF_CONDUCT.md \
+  CHANGELOG.md \
   CONTRIBUTING.md \
   .github
 
