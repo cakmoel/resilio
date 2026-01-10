@@ -1,8 +1,15 @@
 #!/usr/bin/env bats
 
+setup() {
+  PROJECT_ROOT="$(dirname "$(dirname "$BATS_TEST_DIRNAME")")"
+  export PROJECT_ROOT
+  export BASE_DIR="$PROJECT_ROOT" # Ensure BASE_DIR is set for lib/stats.sh
+  source "${PROJECT_ROOT}/tests/unit/common.bash"
+}
+
 @test "P95 percentile follows discrete index definition" {
   run bash -c '
-    source lib/stats.sh
+    source "${PROJECT_ROOT}/lib/stats.sh"
     printf "1\n2\n3\n4\n5\n" | percentile 95
   '
   [ "$status" -eq 0 ]
@@ -11,7 +18,7 @@
 
 @test "Welch is preferred for n >= 30 with mild skew/kurtosis" {
   run bash -c '
-    source lib/normality.sh
+    source "${PROJECT_ROOT}/lib/normality.sh"
     choose_test 30 0.9 1.8
   '
   [ "$status" -eq 0 ]
@@ -20,7 +27,7 @@
 
 @test "Mann-Whitney used for small sample size" {
   run bash -c '
-    source lib/normality.sh
+    source "${PROJECT_ROOT}/lib/normality.sh"
     choose_test 20 0.2 0.5
   '
   [ "$status" -eq 0 ]

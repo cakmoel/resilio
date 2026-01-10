@@ -1,8 +1,11 @@
 #!/usr/bin/env bats
 
 setup() {
-  export CONF_Z=1.96
-  export BASE_DIR="/var/www/html/load-tester"
+  PROJECT_ROOT="$(dirname "$(dirname "$BATS_TEST_DIRNAME")")"
+  export PROJECT_ROOT
+  export BASE_DIR="$PROJECT_ROOT" # Standardize BASE_DIR definition
+  source "${PROJECT_ROOT}/tests/unit/common.bash"
+  export CONF_Z=1.96 # Keep this specific export
 }
 
 @test "mean calculation is correct" {
