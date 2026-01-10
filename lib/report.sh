@@ -34,10 +34,10 @@ This report follows established research methodologies from computer performance
 EOF_INNER
 
     for scenario in "${!SCENARIOS[@]}"; do
-        cat >> "$REPORT_FILE" << EOF_INNER
+            cat >> "$REPORT_FILE" << EOF_INNER
 
 ### $scenario
-**URL**: 
+**URL**: <!-- shellcheck disable=SC2006 -->
 ```
 ${SCENARIOS[$scenario]}
 ```
