@@ -85,11 +85,6 @@ log_error() { echo "[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$ERROR_LO
 log_info() { echo "[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "${REPORT_DIR}/execution.log"; }
 
 main() {
-    if [[ "${1:-}" == "--dry-run" ]]; then
-        echo "Dry run: Configuration loaded. Exiting."
-        exit 0
-    fi
-
     echo "========================================="
     echo "RESEARCH-BASED LOAD TESTING v6.2"
     echo "Environment: ${APP_ENV^^}"

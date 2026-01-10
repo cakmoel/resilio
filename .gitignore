@@ -73,4 +73,5 @@ experiments/
 *.log 
 *.csv 
 *.txt
-resilio_performance_methodology.md 
+GEMINI.md
+*.GEMINI.md

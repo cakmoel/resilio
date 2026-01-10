@@ -39,15 +39,3 @@ parse_ab_output() {
     : "$p90" # Satisfy ShellCheck unused variable check
     echo "SUCCESS|$rps|$time_per_req|$failed|$transfer_rate|$connect_avg|$processing_avg|$total_avg|$p50|$p90|$p95|$p99|0|0"
 }
-
-extract_samples() {
-    local file="$1"
-    local iterations_val=${ITERATIONS:-$TOTAL_ITERATIONS}
-    local warmup_ratio_val=${WARMUP_RATIO:-0}
-
-    awk -v iter="$iterations_val" -v ratio="$warmup_ratio_val" '
-        BEGIN { warmup = int(iter * ratio) }
-        NR > warmup { print }
-    ' "$file"
-}
-

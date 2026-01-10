@@ -1,13 +1,3 @@
-#!/bin/bash
-echo "Requests per second:    123.45 [#/sec] (mean)"
-echo "Time per request:       405.021 [ms] (mean)"
-echo "Failed requests:        0"
-echo "Transfer rate:          123.45 [Kbytes/sec] received"
-echo "Connect:                1 2 3 4"
-echo "Processing:             1 2 3 4"
-echo "Total:                  1 2 3 4"
-echo "Percentage of the requests served within a certain time (ms)"
-echo " 50%      1"
-echo " 90%      2"
-echo " 95%      3"
-echo " 99%      4"
+#!/usr/bin/env bash
+echo "starttime,seconds,ctime,dtime,ttime,wait" > "$4"
+echo "1,0.01,1,2,100,99" >> "$4"
