@@ -1,5 +1,21 @@
 # shellcheck shell=bash
 
+extract_samples() {
+    local samples_file="$1"
+    local total_samples
+    total_samples=$(wc -l < "$samples_file")
+
+    # Ensure ITERATIONS and WARMUP_RATIO are set
+    : "${ITERATIONS:=1}"
+    : "${WARMUP_RATIO:=0}"
+
+    local warmup_count
+    warmup_count=$(echo "scale=0; ($total_samples * $WARMUP_RATIO) / 1" | bc -l)
+
+    # Print samples after warm-up
+    tail -n +$((warmup_count + 1)) "$samples_file"
+}
+
 parse_ab_output() {
     local file="$1"
     local scenario="$2"
@@ -10,23 +26,36 @@ parse_ab_output() {
         return 1
     fi
     
-    local rps time_per_req failed transfer_rate connect_line processing_line total_line connect_avg processing_avg total_avg p50 p90 p95 p99
+    local rps
     rps=$(grep "Requests per second:" "$file" | awk '{print $4}')
+    local time_per_req
     time_per_req=$(grep "Time per request:" "$file" | head -1 | awk '{print $4}')
+    local failed
     failed=$(grep "Failed requests:" "$file" | awk '{print $3}')
+    local transfer_rate
     transfer_rate=$(grep "Transfer rate:" "$file" | awk '{print $3}')
     
+    local connect_line
     connect_line=$(grep "Connect:" "$file")
+    local processing_line
     processing_line=$(grep "Processing:" "$file")
+    local total_line
     total_line=$(grep "Total:" "$file")
     
+    local connect_avg
     connect_avg=$(echo "$connect_line" | awk '{if ($3 ~ /\[.+/) {print $4} else {print $3}}')
+    local processing_avg
     processing_avg=$(echo "$processing_line" | awk '{if ($3 ~ /\[.+/) {print $4} else {print $3}}')
+    local total_avg
     total_avg=$(echo "$total_line" | awk '{if ($3 ~ /\[.+/) {print $4} else {print $3}}')
     
+    local p50
     p50=$(grep -A 20 "Percentage" "$file" | grep "50%" | awk '{print $2}')
+    local p90
     p90=$(grep -A 20 "Percentage" "$file" | grep "90%" | awk '{print $2}')
+    local p95
     p95=$(grep -A 20 "Percentage" "$file" | grep "95%" | awk '{print $2}')
+    local p99
     p99=$(grep -A 20 "Percentage" "$file" | grep "99%" | awk '{print $2}')
     
     [[ -z "$rps" ]] && rps="0"

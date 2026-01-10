@@ -1,11 +1,15 @@
 # shellcheck shell=bash
 
 capture_system_metrics() {
-    local timestamp cpu_usage mem_stats load disk_io
+    local timestamp
     timestamp=$(date +%s)
+    local cpu_usage
     cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
+    local mem_stats
     mem_stats=$(free -m | awk 'NR==2{print $3","$4}')
+    local load
     load=$(uptime | awk -F'load average:' '{print $2}' | tr -d ' ' | tr ',' ' ')
+    local disk_io
     disk_io=$(iostat -d -k 1 2 2>/dev/null | tail -1 | awk '{print $3","$4}' || echo "0,0")
     
     echo "$timestamp,${cpu_usage:-0},0,$mem_stats,$load,$disk_io" >> "$SYSTEM_METRICS_FILE"
@@ -26,8 +30,9 @@ run_research_test() {
     result=$(parse_ab_output "$temp_file" "$scenario")
     echo "$result" > "${temp_file}.parsed"
     
-    local think_time=$(( (RANDOM % THINK_TIME_MS) + 500 ))
-    sleep "$(echo "scale=3; $think_time / 1000" | bc)"
+    local think_time
+    think_time=$(( (RANDOM % THINK_TIME_MS) + 500 ))
+    sleep "$(echo \"scale=3; $think_time / 1000\" | bc)"
     
     echo "$result"
 }
@@ -49,8 +54,10 @@ save_baseline() {
         ((iteration++))
     done
     
-    if [[ "$USE_GIT_TRACKING" == true ]] && command -v git &>/dev/null; then
-        if git -C "$BASE_DIR" rev-parse --git-dir &>/dev/null; then
+    if [[ "$USE_GIT_TRACKING" == true ]] && command -v git &>/dev/null;
+    then
+        if git -C "$BASE_DIR" rev-parse --git-dir &>/dev/null;
+        then
             git -C "$BASE_DIR" add "$baseline_file" 2>/dev/null || true
         fi
     fi
