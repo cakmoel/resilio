@@ -3,8 +3,8 @@
 **High-Performance Load Testing Suite for Web Durability and Speed**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.2.0-green.svg)](CHANGELOG.md)
-[![DLT Engine](https://img.shields.io/badge/DLT-v6.2.0-brightgreen.svg)](bin/dlt.sh)
+[![Version](https://img.shields.io/badge/version-6.2.1-green.svg)](CHANGELOG.md)
+[![DLT Engine](https://img.shields.io/badge/DLT-v6.2.1-brightgreen.svg)](bin/dlt.sh)
 [![SLT Engine](https://img.shields.io/badge/SLT-v2.1-blue.svg)](bin/slt.sh)
 ![CI](https://github.com/cakmoel/resilio/actions/workflows/ci.yml/badge.svg)
 

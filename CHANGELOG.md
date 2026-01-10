@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.2.1] - 2026-01-10
+
+### Maintenance Release: Test Suite Refactoring
+
+This is a maintenance release that focuses on improving the internal test suite and code quality.
+
+### Fixed
+- **Methodology Contract Test**: The `P95 percentile` test within the methodology contract has been fixed to ensure it runs correctly by providing the necessary `BASE_DIR` environment variable, guaranteeing the statistical integrity of our core logic.
+- **Test Suite Alignment**: Removed obsolete tests for removed functions (`choose_test`, `extract_samples`, `--dry-run` functionality), improving test suite accuracy and maintainability.
+
+### Changed
+- **Code Cleanup**: Removed unused functions (`choose_test`, `extract_samples`) and `--dry-run` logic from the codebase, leading to a leaner and more focused tool.
+- **README**: Updated version badges to `6.2.1`.
+
+---
+
 ## [6.2.0] - 2026-01-09
 
 ### Major Release: High-Performance Python Math Engine
