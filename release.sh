@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Resilio v6.2.1 Release - Quick Command Reference
+# Resilio v6.2.2 Release - Quick Command Reference
 # =============================================================================
 # This script ASSUMES:
 # - You are on main
@@ -10,7 +10,7 @@ set -euo pipefail
 # - Methodology + contract tests are locked
 # =============================================================================
 
-VERSION="6.2.1"
+VERSION="6.2.2"
 TAG="v${VERSION}"
 REPO="cakmoel/resilio"
 
@@ -41,7 +41,7 @@ echo ""
 echo "=== Step 1: Verify Versions & Files ==="
 
 # Version references
-grep -R "v6.2" README.md docs || true
+grep -R "v${VERSION}" README.md docs || true
 grep -R "${VERSION}" docs || true
 
 # Required files
@@ -104,7 +104,14 @@ echo "=== Step 4: Create Git Tag ==="
 
 git tag -a "${TAG}" -m "Resilio ${TAG}: Reproducible Performance Auditing Toolkit
 
-Key Highlights:
+Summary of v6.2.2 fixes:
+- Resolved dlt.sh --dry-run hanging issue.
+- Fixed unit test failures due to incorrect library sourcing in Bats subshells.
+- Implemented missing choose_test and extract_samples functions.
+- Standardized BASE_DIR and PROJECT_ROOT in Bats test setup.
+- Addressed multiple shellcheck warnings (SC2155, SC2188, SC2046, SC2206).
+
+Key Highlights of the Toolkit:
 - Modular CLI + reusable statistical core
 - Welch vs Mann–Whitney selection (Ruxton-aligned)
 - Contract-locked statistical methodology
