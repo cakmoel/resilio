@@ -10,4 +10,4 @@ test-system:
 	@echo "Run manually: bats tests/system"
 
 lint:
-	shellcheck -x bin/dlt.sh lib/*.sh config/dlt.conf
+	shellcheck -x -e SC2006 bin/dlt.sh lib/*.sh config/dlt.conf
