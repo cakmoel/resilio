@@ -43,11 +43,11 @@ parse_ab_output() {
     total_line=$(grep "Total:" "$file")
     
     local connect_avg
-    connect_avg=$(echo "$connect_line" | awk '{if ($3 ~ /\[.+/) {print $4} else {print $3}}')
+    connect_avg=$(echo "$connect_line" | awk '{print $4}')
     local processing_avg
-    processing_avg=$(echo "$processing_line" | awk '{if ($3 ~ /\[.+/) {print $4} else {print $3}}')
+    processing_avg=$(echo "$processing_line" | awk '{print $4}')
     local total_avg
-    total_avg=$(echo "$total_line" | awk '{if ($3 ~ /\[.+/) {print $4} else {print $3}}')
+    total_avg=$(echo "$total_line" | awk '{print $4}')
     
     local p50
     p50=$(grep -A 20 "Percentage" "$file" | grep "50%" | awk '{print $2}')

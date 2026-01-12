@@ -37,10 +37,7 @@ EOF_INNER
             cat >> "$REPORT_FILE" << EOF_INNER
 
 ### $scenario
-**URL**: <!-- shellcheck disable=SC2006 -->
-```
-${SCENARIOS[$scenario]}
-```
+**URL**: ${SCENARIOS[$scenario]}
 
 #### Performance Metrics with 95% Confidence Intervals (Jain, 1991)
 

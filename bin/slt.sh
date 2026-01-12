@@ -48,9 +48,9 @@ if [[ -f "${BASE_DIR}/lib/workload.sh" ]]; then
 else
     # Fallback to local placeholders if config is missing
     declare -A SCENARIOS=(
-        ["Static"]="STATIC_PAGE"
-        ["Dynamic"]="DYNAMIC_PAGE"
-        ["404_Not_Found"]="404_ERROR"
+        ["DYNAMIC"]="http://myblog.local/post/3/visiting-bali-a-journey-of-serenity-and-culture"
+        ["STATIC"]="http://myblog.local/login"
+        ["404_ERROR"]="http://myblog.local/this-is-not-real-page"
     )
 fi
 

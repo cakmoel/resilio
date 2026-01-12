@@ -5,22 +5,7 @@ set -euo pipefail
 # LOCALE CONFIGURATION - Smart Auto-Detection
 # =============================================================================
 detect_and_configure_locale() {
-    local current_locale="${LC_NUMERIC:-${LC_ALL:-${LANG:-C}}}"
-    local test_decimal
-    test_decimal=$(printf "%.2f" 3.14 2>/dev/null | cut -d'.' -f2)
-    if [[ "$test_decimal" == "14" ]]; then
-        if echo "scale=2; 3.14 * 2" | bc -l &>/dev/null; then
-            export LC_NUMERIC="$current_locale"
-            return 0
-        fi
-    fi
-    for try_locale in "C" "en_US.UTF-8" "en_GB.UTF-8" "POSIX"; do
-        if locale -a 2>/dev/null | grep -qiE "^${try_locale}"; then
-            export LC_NUMERIC="$try_locale"
-            export LANG="${LANG:-$try_locale}"
-            return 0
-        fi
-    done
+    # Force C locale for consistent number parsing
     export LC_NUMERIC="C"
     export LANG="C"
     return 0

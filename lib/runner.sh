@@ -25,6 +25,9 @@ run_research_test() {
     temp_file="${REPORT_DIR}/raw_data/${scenario}_iter${iteration}_$(date +%s).txt"
     
     timeout "$TEST_TIMEOUT" "$AB_BIN" -k -n "$AB_REQUESTS" -c "$concurrency" "$url" > "$temp_file" 2>&1
+    echo "--- RAW AB OUTPUT FOR $scenario ($iteration) ---" >&2
+    cat "$temp_file" >&2
+    echo "------------------------------------------------" >&2
     
     local result
     result=$(parse_ab_output "$temp_file" "$scenario")
@@ -32,7 +35,7 @@ run_research_test() {
     
     local think_time
     think_time=$(( (RANDOM % THINK_TIME_MS) + 500 ))
-    sleep "$(echo \"scale=3; $think_time / 1000\" | bc)"
+    sleep $(echo "scale=3; $think_time / 1000" | bc)
     
     echo "$result"
 }
@@ -70,7 +73,7 @@ load_latest_baseline() {
     local baseline_file
     # shellcheck disable=SC2012
     baseline_file=$(ls -t "${BASELINE_DIR}/${BASELINE_PREFIX}_baseline_${scenario}_"*.csv 2>/dev/null | head -1)
-    if [[ -z "$baseline_file" ]] || [[ ! -f "$baseline_file" ]]; then echo ""; return 1; fi
+    if [[ -z "$baseline_file" ]] || [[ ! -f "$baseline_file" ]]; then echo ""; return 0; fi
     echo "$baseline_file"
     return 0
 }

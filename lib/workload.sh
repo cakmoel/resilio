@@ -2,9 +2,9 @@
 # shellcheck disable=SC2034
 
 declare -A SCENARIOS=(
-  ["STATIC"]="http://example.com/login"
-  ["DYNAMIC"]="http://example.com/post/3/any-url-path"
-  ["404_ERROR"]="http://example.com/this-is-not-real-page"
+    ["DYNAMIC"]="http://myblog.local/post/3/visiting-bali-a-journey-of-serenity-and-culture"
+    ["STATIC"]="http://myblog.local/login"
+    ["404_ERROR"]="http://myblog.local/this-is-not-real-page"
 )
 
 declare -A CONCURRENCY=(
