@@ -35,7 +35,7 @@ run_research_test() {
     
     local think_time
     think_time=$(( (RANDOM % THINK_TIME_MS) + 500 ))
-    sleep $(echo "scale=3; $think_time / 1000" | bc)
+    sleep "$(echo "scale=3; $think_time / 1000" | bc)"
     
     echo "$result"
 }
