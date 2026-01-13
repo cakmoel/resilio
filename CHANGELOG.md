@@ -25,6 +25,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.3.0] - 2026-01-13
+
+### Added
+
+- **Iteration Delay for SLT (Rate Limiting)**:
+  - Introduced `ITERATION_DELAY_SECONDS` environment variable for `slt.sh` to control the delay between load test iterations.
+  - Allows users to pace requests to prevent overwhelming target systems, simulate realistic traffic, and improve test stability.
+  - Configurable via `ITERATION_DELAY_SECONDS=<seconds> ./bin/slt.sh`.
+
+---
+
 ## [6.2.1] - 2026-01-10
 
 ### Maintenance Release: Test Suite Refactoring
