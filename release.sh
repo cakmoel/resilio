@@ -10,7 +10,7 @@ set -euo pipefail
 # - Methodology + contract tests are locked
 # =============================================================================
 
-VERSION="6.2.2"
+VERSION="6.3.0"
 TAG="v${VERSION}"
 REPO="cakmoel/resilio"
 
