@@ -5,7 +5,7 @@
 # Author: M.Noermoehammad
 # Improved Simple Load Testing(slt) Script
 # License: MIT License
-# Version: 6.2 (SLT v2.1)
+# Version: 6.3 (SLT v2.2)
 # 
 # Improvements over v2.0:
 # - Synchronized with Resilio Suite v6.2

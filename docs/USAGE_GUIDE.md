@@ -120,7 +120,7 @@ ITERATIONS=1000           # Total test iterations
 AB_REQUESTS=100           # Requests per iteration
 AB_CONCURRENCY=10         # Concurrent users
 AB_TIMEOUT=30             # Timeout in seconds
-```
+ITERATION_DELAY_SECONDS=0 # Delay between iterations in seconds (0 for no delay)```
 
 **Customization:**
 
@@ -152,6 +152,31 @@ declare -A SCENARIOS=(
 - Test diverse endpoint types (static, dynamic, API)
 - Include critical user journeys
 - Test expected error cases (404, 500)
+
+### Rate Limiting / Iteration Delay (New in v6.3)
+
+To prevent overwhelming the system under test or to simulate more realistic traffic patterns, `slt.sh` now supports a configurable delay between test iterations.
+
+**Configuration:**
+
+```bash
+ITERATION_DELAY_SECONDS=0 # Delay between iterations in seconds (0 for no delay)
+```
+
+**Customization:**
+
+You can specify the delay by setting the `ITERATION_DELAY_SECONDS` environment variable:
+
+```bash
+# Introduce a 5-second delay between each iteration
+ITERATION_DELAY_SECONDS=5 ./bin/slt.sh
+```
+
+**Benefits:**
+*   **Controlled Test Pacing:** Prevents overwhelming target systems by introducing configurable pauses between test cycles.
+*   **Reduced System Load:** Spaces out test requests to simulate more realistic user behavior or to comply with system capacity limits.
+*   **Improved Stability:** Helps maintain the stability of the system under test during prolonged load testing by giving it time to recover between iterations.
+
 
 ### Execution Flow
 

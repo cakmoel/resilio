@@ -3,9 +3,8 @@
 **High-Performance Load Testing Suite for Web Durability and Speed**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.2.1-green.svg)](CHANGELOG.md)
-[![DLT Engine](https://img.shields.io/badge/DLT-v6.2.1-brightgreen.svg)](bin/dlt.sh)
-[![SLT Engine](https://img.shields.io/badge/SLT-v2.1-blue.svg)](bin/slt.sh)
+[![Version](https://img.shields.io/badge/version-6.3.0-green.svg)](CHANGELOG.md)
+[![SLT Engine](https://img.shields.io/badge/SLT-v2.2-blue.svg)](bin/slt.sh)
 ![CI](https://github.com/cakmoel/resilio/actions/workflows/ci.yml/badge.svg)
 
 
@@ -29,85 +28,42 @@ By leveraging the reliability of ApacheBench and adding layers of statistical an
 
 ---
 
-## 🆕 What's New in v6.2
+## 🆕 What's New in v6.3
 
-### Major Enhancement: Python-Powered Mathematical Engine
+### New Feature: Iteration Delay for Rate Limiting
 
-v6.2 introduces a **consolidated Python-based math engine**, resolving the "offload math" performance bottleneck while maintaining the familiar CLI experience:
+v6.3 introduces a new configurable parameter for `slt.sh` to control the pacing of your load tests.
 
-#### New Features
+#### Key Benefits:
+*   **Controlled Test Pacing:** Prevent overwhelming target systems by introducing configurable pauses between test cycles.
+*   **Reduced System Load:** Space out test requests to simulate more realistic user behavior or to comply with system capacity limits.
+*   **Improved Stability:** Help maintain the stability of the system under test during prolonged load testing by giving it time to recover between iterations.
 
-1.  **High-Performance Math Engine**
-    -   Migrated core statistics from pure Bash/`bc` to optimized Python logic.
-    -   **~40x speedup** for standard statistical calculations (mean, variance, CI).
-    -   Resolved infinite execution issues for non-parametric tests on large datasets.
-
-2.  **Efficient Mann-Whitney U Implementation**
-    -   New $O(n \log n)$ rank-calculation algorithm.
-    -   Handles thousands of iterations in milliseconds.
-    -   Robust handling of ties and large sample approximations.
-
-3.  **Unified Hypothesis Testing**
-    -   Single-pass distribution analysis and testing.
-    -   Returns comprehensive metrics (p-value, effect size, normality) in one call.
-    -   Improved numerical stability for extreme datasets.
-
-4.  **TDD-Verified Correctness**
-    -   Comprehensive Python unit tests for all mathematical kernels.
-    -   Maintained legacy Bats test suite for shell integration parity.
-
-#### Performance Impact
-
-| Operation | v6.1 (Legacy Math) | v6.2 (Python Math) | Speedup |
-|-----------|-------------------|-------------------|---------|
-| Mean (1k items) | ~6,000 ms | ~150 ms | **40x** |
-| Mann-Whitney U (1k x 1k) | > 10 min (Infinite) | ~250 ms | **∞** |
-
-#### Why This Matters
-
-**Real-world performance data is often non-normal:**
-- P99 latencies have long tails (outliers)
-- Error rates are heavily skewed (many zeros)
-- Cache hit rates are bimodal (hit vs miss)
-
-**v6.1 (Welch's t-test only)** could miss regressions in tail latencies because outliers inflate variance.
-
-**v6.2 (Automatic selection)** uses Mann-Whitney U for skewed data, providing **~35% better detection** of tail latency regressions, now with significantly faster execution.
-
-#### Example: P99 Latency Testing
+#### How to Use:
+You can configure the delay by setting the `ITERATION_DELAY_SECONDS` environment variable before running `slt.sh`:
 
 ```bash
-# Scenario: Testing P99 latency optimization
-
-# v6.1 Result (Welch's t-test only):
-# p-value: 0.12 (not significant)
-# Verdict: No change detected ❌
-# Problem: Outliers masked the improvement
-
-# v6.2 Result (Automatic selection):
-# Test Used: Mann-Whitney U test (non-parametric)
-# Reason: Non-normal distribution (high kurtosis)
-# p-value: 0.032 (significant!)
-# Verdict: ✅ SIGNIFICANT IMPROVEMENT ✓
-# Success: Correctly detected median improvement
+ITERATION_DELAY_SECONDS=5 ./bin/slt.sh
 ```
+
+This will introduce a 5-second pause after all scenarios within a single iteration have completed, before the next iteration begins.
 
 ### Backward Compatibility
 
-**✅ 100% compatible with v6.1 usage:**
-- All v6.1 commands work identically
+**✅ 100% compatible with v6.2 usage:**
+- All v6.2 commands work identically
 - Baseline format unchanged
 - Report structure preserved
 - CLI interface identical
-- Only enhancement: Better accuracy and significantly improved speed automatically
+- Only enhancement: Addition of iteration delay for SLT.
 
-**Migration:** Simply replace `dlt.sh` - no configuration changes needed!
+**Migration:** Simply use `v6.3` - no configuration changes needed!
 
 ---
 
 ## Core Engines
 
-### Resilio SLT (Simple Load Testing) - `bin/slt.sh` v2.1 (Suite v6.2)
+### Resilio SLT (Simple Load Testing) - `bin/slt.sh` v2.2 (Suite v6.3)
 
 The **SLT engine** is optimized for agile development cycles and rapid feedback. Perfect for:
 
@@ -257,6 +213,9 @@ nano dlt.sh  # or slt.sh
 
 # Custom parameters
 ITERATIONS=500 AB_REQUESTS=50 AB_CONCURRENCY=5 ./slt.sh
+
+# With iteration delay
+ITERATION_DELAY_SECONDS=5 ITERATIONS=100 AB_REQUESTS=10 AB_CONCURRENCY=2 ./slt.sh
 ```
 
 **Deep Load Testing (DLT):**
@@ -736,6 +695,7 @@ Resilio v6.2 implements methodologies from:
 | Baseline management | ✅ | ✅ | ✅ |
 | Smart locale detection | ✅ | ✅ | ✅ |
 | Python Math Engine (40x) | ❌ | ❌ | ✅ |
+| Iteration Delay (Rate Limiting) | ❌ | ❌ | ✅ |
 | Best for tail latencies | ⚠️ | ✅ | ✅ |
 | Handles outliers | ⚠️ | ✅ | ✅ |
 
@@ -786,7 +746,7 @@ If you use Resilio in academic research, please cite:
   author = {Noermoehammad, M.},
   title = {Resilio: Research-Based Performance Testing Suite},
   year = {2025},
-  version = {6.2},
+  version = {6.3},
   url = {https://github.com/cakmoel/resilio}
 }
 ```
