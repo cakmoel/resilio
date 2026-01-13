@@ -170,31 +170,46 @@ capture_gregg_system_metrics() {
     local timestamp
     timestamp=$(date +%s)
     
-    # CPU metrics with load average
-    local cpu_usage
-    cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
-    local load_avg
-    load_avg=$(uptime | awk -F'load average:' '{print $2}' | sed 's/^[[:space:]]*//')
+    # CPU metrics with load average (robust extraction)
+    local cpu_usage=0
+    if cpu_temp=$(timeout 5 top -bn1 2>/dev/null | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1 2>/dev/null); then
+        cpu_usage="$cpu_temp"
+    fi
     
-    # Memory stats
-    local mem_stats
-    mem_stats=$(free -m | awk 'NR==2{print $3","$4","$6","$7}')
+    local load_avg="0,0,0"
+    if load_temp=$(timeout 5 uptime 2>/dev/null | awk -F'load average:' '{print $2}' | sed 's/^[[:space:]]*//' 2>/dev/null); then
+        load_avg="$load_temp"
+    fi
+    
+    # Memory stats (robust extraction)
+    local mem_stats="0,0,0,0"
+    if mem_temp=$(timeout 5 free -m 2>/dev/null | awk 'NR==2{print $3","$4","$6","$7}' 2>/dev/null); then
+        mem_stats="$mem_temp"
+    fi
     
     # Context switches (Gregg's key metric)
-    local ctxt
-    ctxt=$(grep ctxt /proc/stat | awk '{print $2}')
+    local ctxt=0
+    if ctxt_temp=$(timeout 5 grep ctxt /proc/stat 2>/dev/null | awk '{print $2}' 2>/dev/null); then
+        ctxt="$ctxt_temp"
+    fi
     
     # Process stats
-    local procs_running
-    procs_running=$(grep procs_running /proc/stat | awk '{print $2}')
-    local procs_blocked
-    procs_blocked=$(grep procs_blocked /proc/stat | awk '{print $2}')
+    local procs_running=0
+    local procs_blocked=0
+    if running_temp=$(timeout 5 grep procs_running /proc/stat 2>/dev/null | awk '{print $2}' 2>/dev/null); then
+        procs_running="$running_temp"
+    fi
+    if blocked_temp=$(timeout 5 grep procs_blocked /proc/stat 2>/dev/null | awk '{print $2}' 2>/dev/null); then
+        procs_blocked="$blocked_temp"
+    fi
     
-    # TCP stats
-    local tcp_stats
-    tcp_stats=$(grep -A1 Tcp: /proc/net/snmp | tail -1 | awk '{print $9","$10","$11","$12}')  # Active, passive, failed, resets
+    # TCP stats (robust extraction)
+    local tcp_stats="0,0,0,0"
+    if tcp_temp=$(timeout 5 grep -A1 Tcp: /proc/net/snmp 2>/dev/null | tail -1 | awk '{print $9","$10","$11","$12}' 2>/dev/null); then
+        tcp_stats="$tcp_temp"
+    fi
     
-    echo "$timestamp,${cpu_usage:-0},$load_avg,$mem_stats,$ctxt,$procs_running,$procs_blocked,$tcp_stats" >> "$output_file"
+    echo "$timestamp,$cpu_usage,$load_avg,$mem_stats,$ctxt,$procs_running,$procs_blocked,$tcp_stats" >> "$output_file"
 }
 
 # Stop all profiling sessions
