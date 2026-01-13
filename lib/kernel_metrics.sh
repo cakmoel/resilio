@@ -7,36 +7,54 @@
 # BASE_DIR is expected to be defined by the sourcing script (bin/dlt.sh)
 
 # Kernel-level metrics collection
-capture_kernel_metrics() {
+capture_kernel_metrics_data() {
     local output_file="$1"
-    local timestamp=$(date +%s)
+    local timestamp
+    timestamp=$(date +%s)
     
     # Process scheduling metrics (Gregg's scheduler analysis)
-    local runqueue=$(cat /proc/loadavg | awk '{print $2}')
-    local runnable=$(grep procs_running /proc/stat | awk '{print $2}')
-    local blocked=$(grep procs_blocked /proc/stat | awk '{print $2}')
+    local runqueue
+    runqueue=$(</proc/loadavg awk '{print $2}')
+    local runnable
+    runnable=$(grep procs_running /proc/stat | awk '{print $2}')
+    local blocked
+    blocked=$(grep procs_blocked /proc/stat | awk '{print $2}')
     
     # Context switches and interrupts
-    local ctxt=$(grep ctxt /proc/stat | awk '{print $2}')
-    local intr=$(grep intr /proc/stat | awk '{print $2}')
-    local softirq=$(grep softirq /proc/stat | awk '{print $2}')
+    local ctxt
+    ctxt=$(grep ctxt /proc/stat | awk '{print $2}')
+    local intr
+    intr=$(grep intr /proc/stat | awk '{print $2}')
+    local softirq
+    softirq=$(grep softirq /proc/stat | awk '{print $2}')
     
     # Memory subsystem metrics
-    local nr_free_pages=$(grep nr_free_pages /proc/vmstat | awk '{print $2}')
-    local nr_inactive_anon=$(grep nr_inactive_anon /proc/vmstat | awk '{print $2}')
-    local nr_active_anon=$(grep nr_active_anon /proc/vmstat | awk '{print $2}')
-    local nr_inactive_file=$(grep nr_inactive_file /proc/vmstat | awk '{print $2}')
-    local nr_active_file=$(grep nr_active_file /proc/vmstat | awk '{print $2}')
-    local pgmajfault=$(grep pgmajfault /proc/vmstat | awk '{print $2}')
+    local nr_free_pages
+    nr_free_pages=$(grep nr_free_pages /proc/vmstat | awk '{print $2}')
+    local nr_inactive_anon
+    nr_inactive_anon=$(grep nr_inactive_anon /proc/vmstat | awk '{print $2}')
+    local nr_active_anon
+    nr_active_anon=$(grep nr_active_anon /proc/vmstat | awk '{print $2}')
+    local nr_inactive_file
+    nr_inactive_file=$(grep nr_inactive_file /proc/vmstat | awk '{print $2}')
+    local nr_active_file
+    nr_active_file=$(grep nr_active_file /proc/vmstat | awk '{print $2}')
+    local pgmajfault
+    pgmajfault=$(grep pgmajfault /proc/vmstat | awk '{print $2}')
     
     # File system metrics
-    local nr_dirty=$(grep nr_dirty /proc/vmstat | awk '{print $2}')
-    local nr_writeback=$(grep nr_writeback /proc/vmstat | awk '{print $2}')
+    local nr_dirty
+    nr_dirty=$(grep nr_dirty /proc/vmstat | awk '{print $2}')
+    local nr_writeback
+    nr_writeback=$(grep nr_writeback /proc/vmstat | awk '{print $2}')
     
     # TCP metrics
-    local tcp_active=$(cat /proc/net/snmp | grep Tcp: | tail -1 | awk '{print $9}')
-    local tcp_passive=$(cat /proc/net/snmp | grep Tcp: | tail -1 | awk '{print $10}')
-    local tcp_retrans_segs=$(cat /proc/net/snmp | grep Tcp: | tail -1 | awk '{print $12}')
+    local tcp_active
+    tcp_active=$(grep -A1 Tcp: /proc/net/snmp | tail -1 | awk '{print $9}')
+    local tcp_passive
+    tcp_passive=$(grep -A1 Tcp: /proc/net/snmp | tail -1 | awk '{print $10}')
+    local tcp_retrans_segs
+    tcp_retrans_segs=$(grep -A1 Tcp: /proc/net/snmp | tail -1 | awk '{print $12}')
     
     echo "$timestamp,$runqueue,$runnable,$blocked,$ctxt,$intr,$softirq,$nr_free_pages,$nr_inactive_anon,$nr_active_anon,$nr_inactive_file,$nr_active_file,$pgmajfault,$nr_dirty,$nr_writeback,$tcp_active,$tcp_passive,$tcp_retrans_segs" >> "$output_file"
 }
@@ -45,7 +63,8 @@ capture_kernel_metrics() {
 capture_process_metrics() {
     local output_file="$1"
     local target_pid="$2"
-    local timestamp=$(date +%s)
+    local timestamp
+    timestamp=$(date +%s)
     
     if [ -z "$target_pid" ] || [ ! -d "/proc/$target_pid" ]; then
         echo "Error: Invalid PID $target_pid"
@@ -53,30 +72,46 @@ capture_process_metrics() {
     fi
     
     # Process CPU metrics
-    local proc_utime=$(cat /proc/$target_pid/stat | awk '{print $14}')
-    local proc_stime=$(cat /proc/$target_pid/stat | awk '{print $15}')
-    local proc_cutime=$(cat /proc/$target_pid/stat | awk '{print $16}')
-    local proc_cstime=$(cat /proc/$target_pid/stat | awk '{print $17}')
-    local proc_threads=$(cat /proc/$target_pid/stat | awk '{print $20}')
+    local proc_utime
+    proc_utime=$(</proc/"$target_pid"/stat awk '{print $14}')
+    local proc_stime
+    proc_stime=$(</proc/"$target_pid"/stat awk '{print $15}')
+    local proc_cutime
+    proc_cutime=$(</proc/"$target_pid"/stat awk '{print $16}')
+    local proc_cstime
+    proc_cstime=$(</proc/"$target_pid"/stat awk '{print $17}')
+    local proc_threads
+    proc_threads=$(</proc/"$target_pid"/stat awk '{print $20}')
     
     # Process memory metrics
-    local proc_vsize=$(cat /proc/$target_pid/stat | awk '{print $23}')
-    local proc_rss=$(cat /proc/$target_pid/stat | awk '{print $24}')
-    local proc_rss_anon=$(grep RssAnon /proc/$target_pid/smaps_rollup 2>/dev/null | awk '{print $2}' || echo "0")
-    local proc_rss_file=$(grep RssFile /proc/$target_pid/smaps_rollup 2>/dev/null | awk '{print $2}' || echo "0")
+    local proc_vsize
+    proc_vsize=$(</proc/"$target_pid"/stat awk '{print $23}')
+    local proc_rss
+    proc_rss=$(</proc/"$target_pid"/stat awk '{print $24}')
+    local proc_rss_anon
+    proc_rss_anon=$(grep RssAnon /proc/"$target_pid"/smaps_rollup 2>/dev/null | awk '{print $2}' || echo "0")
+    local proc_rss_file
+    proc_rss_file=$(grep RssFile /proc/"$target_pid"/smaps_rollup 2>/dev/null | awk '{print $2}' || echo "0")
     
     # Process I/O metrics
-    local read_bytes=$(grep read_bytes /proc/$target_pid/io 2>/dev/null | awk '{print $2}' || echo "0")
-    local write_bytes=$(grep write_bytes /proc/$target_pid/io 2>/dev/null | awk '{print $2}' || echo "0")
-    local read_ops=$(grep syscr /proc/$target_pid/io 2>/dev/null | awk '{print $2}' || echo "0")
-    local write_ops=$(grep syscw /proc/$target_pid/io 2>/dev/null | awk '{print $2}' || echo "0")
+    local read_bytes
+    read_bytes=$(grep read_bytes /proc/"$target_pid"/io 2>/dev/null | awk '{print $2}' || echo "0")
+    local write_bytes
+    write_bytes=$(grep write_bytes /proc/"$target_pid"/io 2>/dev/null | awk '{print $2}' || echo "0")
+    local read_ops
+    read_ops=$(grep syscr /proc/"$target_pid"/io 2>/dev/null | awk '{print $2}' || echo "0")
+    local write_ops
+    write_ops=$(grep syscw /proc/"$target_pid"/io 2>/dev/null | awk '{print $2}' || echo "0")
     
     # Process file descriptors
-    local fd_count=$(ls /proc/$target_pid/fd 2>/dev/null | wc -l)
+    local fd_count
+    fd_count=$(find /proc/"$target_pid"/fd 2>/dev/null | wc -l)
     
     # Context switches
-    local vol_ctxt=$(cat /proc/$target_pid/status | grep voluntary_ctxt_switches | awk '{print $2}')
-    local nonvol_ctxt=$(cat /proc/$target_pid/status | grep nonvoluntary_ctxt_switches | awk '{print $2}')
+    local vol_ctxt
+    vol_ctxt=$(</proc/"$target_pid"/status grep voluntary_ctxt_switches | awk '{print $2}')
+    local nonvol_ctxt
+    nonvol_ctxt=$(</proc/"$target_pid"/status grep nonvoluntary_ctxt_switches | awk '{print $2}')
     
     echo "$timestamp,$target_pid,$proc_utime,$proc_stime,$proc_cutime,$proc_cstime,$proc_threads,$proc_vsize,$proc_rss,$proc_rss_anon,$proc_rss_file,$read_bytes,$write_bytes,$read_ops,$write_ops,$fd_count,$vol_ctxt,$nonvol_ctxt" >> "$output_file"
 }
@@ -84,29 +119,44 @@ capture_process_metrics() {
 # Network stack deep dive (Gregg's network analysis)
 capture_network_stack_metrics() {
     local output_file="$1"
-    local timestamp=$(date +%s)
+    local timestamp
+    timestamp=$(date +%s)
     
     # TCP detailed metrics
-    local tcp_ext=$(cat /proc/net/netstat | grep TcpExt: | tail -1)
-    local syncookies_sent=$(echo "$tcp_ext" | awk '{print $11}')
-    local syncookies_recv=$(echo "$tcp_ext" | awk '{print $12}')
-    local syncookies_failed=$(echo "$tcp_ext" | awk '{print $13}')
-    local embryonic_rsts=$(echo "$tcp_ext" | awk '{print $16}')
-    local prune_called=$(echo "$tcp_ext" | awk '{print $17}')
+    local tcp_ext
+    tcp_ext=$(</proc/net/netstat grep TcpExt: | tail -1)
+    local syncookies_sent
+    syncookies_sent=$(echo "$tcp_ext" | awk '{print $11}')
+    local syncookies_recv
+    syncookies_recv=$(echo "$tcp_ext" | awk '{print $12}')
+    local syncookies_failed
+    syncookies_failed=$(echo "$tcp_ext" | awk '{print $13}')
+    local embryonic_rsts
+    embryonic_rsts=$(echo "$tcp_ext" | awk '{print $16}')
+    local prune_called
+    prune_called=$(echo "$tcp_ext" | awk '{print $17}')
     
     # TCP retransmission metrics
-    local tcp_retrans=$(cat /proc/net/snmp | grep Tcp: | tail -1)
-    local tcp_retrans_segs=$(echo "$tcp_retrans" | awk '{print $12}')
-    local tcp_out_segs=$(echo "$tcp_retrans" | awk '{print $10}')
-    local tcp_in_segs=$(echo "$tcp_retrans" | awk '{print $5}')
+    local tcp_retrans
+    tcp_retrans=$(grep -A1 Tcp: /proc/net/snmp | tail -1)
+    local tcp_retrans_segs
+    tcp_retrans_segs=$(echo "$tcp_retrans" | awk '{print $12}')
+    local tcp_out_segs
+    tcp_out_segs=$(echo "$tcp_retrans" | awk '{print $10}')
+    local tcp_in_segs
+    tcp_in_segs=$(echo "$tcp_retrans" | awk '{print $5}')
     
     # Connection tracking
-    local tcp_established=$(ss -s 2>/dev/null | grep TCP | awk '{print $4}' || echo "0")
-    local tcp_time_wait=$(ss -s 2>/dev/null | grep TCP | awk '{print $6}' || echo "0")
+    local tcp_established
+    tcp_established=$(ss -s 2>/dev/null | grep TCP | awk '{print $4}' || echo "0")
+    local tcp_time_wait
+    tcp_time_wait=$(ss -s 2>/dev/null | grep TCP | awk '{print $6}' || echo "0")
     
     # Packet drops
-    local rx_dropped=$(cat /proc/net/dev | grep -v lo | awk '{sum+=$4} END {print sum}')
-    local tx_dropped=$(cat /proc/net/dev | grep -v lo | awk '{sum+=$14} END {print sum}')
+    local rx_dropped
+    rx_dropped=$(</proc/net/dev grep -v lo | awk '{sum+=$4} END {print sum}')
+    local tx_dropped
+    tx_dropped=$(</proc/net/dev grep -v lo | awk '{sum+=$14} END {print sum}')
     
     echo "$timestamp,$syncookies_sent,$syncookies_recv,$syncookies_failed,$embryonic_rsts,$prune_called,$tcp_retrans_segs,$tcp_out_segs,$tcp_in_segs,$tcp_established,$tcp_time_wait,$rx_dropped,$tx_dropped" >> "$output_file"
 }
@@ -114,11 +164,13 @@ capture_network_stack_metrics() {
 # Block I/O detailed metrics (Gregg's I/O analysis)
 capture_block_io_metrics() {
     local output_file="$1"
-    local timestamp=$(date +%s)
+    local timestamp
+    timestamp=$(date +%s)
     
     # Get block device stats
     local read_ios=0 write_ios=0 read_bytes=0 write_bytes=0 read_time=0 write_time=0
     
+    # shellcheck disable=SC2034
     while read -r device read_ios_temp read_merges read_sectors read_time_temp write_ios_temp write_merges write_sectors write_time_temp current ios_weight; do
         if [ "$device" != "Device:" ] && [ -n "$device" ]; then
             read_ios=$((read_ios + read_ios_temp))
@@ -133,11 +185,12 @@ capture_block_io_metrics() {
     # I/O queue depth
     local queue_depth=0
     if [ -f /proc/queue_depth ]; then
-        queue_depth=$(cat /proc/queue_depth)
+        queue_depth=$(</proc/queue_depth)
     fi
     
     # I/O scheduler statistics
-    local nr_inflight=$(cat /proc/diskstats | awk '{sum+=$12} END {print sum}')
+    local nr_inflight
+    nr_inflight=$(</proc/diskstats awk '{sum+=$12} END {print sum}')
     
     echo "$timestamp,$read_ios,$write_ios,$read_bytes,$write_bytes,$read_time,$write_time,$queue_depth,$nr_inflight" >> "$output_file"
 }
@@ -163,7 +216,7 @@ start_kernel_metrics_collection() {
     # Start collection loops
     {
         while true; do
-            capture_kernel_metrics "$kernel_file"
+            capture_kernel_metrics_data "$kernel_file"
             sleep 1
         done
     } &
@@ -211,7 +264,8 @@ stop_kernel_metrics_collection() {
     
     for pid_file in "${output_dir}/kernel_metrics"/*.pid; do
         if [ -f "$pid_file" ]; then
-            local pid=$(cat "$pid_file")
+            local pid
+            pid=$(cat "$pid_file")
             kill -TERM "$pid" 2>/dev/null || true
             rm -f "$pid_file"
         fi
@@ -242,24 +296,21 @@ EOF
 
     # Analyze run queue patterns
     if [ -f "${output_dir}/kernel_metrics/kernel_metrics.csv" ]; then
-        echo '```bash' >> "$report_file"
-        echo "# Run queue statistics" >> "$report_file"
-        tail -10 "${output_dir}/kernel_metrics/kernel_metrics.csv" | cut -d',' -f2 | awk '{sum+=$1; if(NR==1) min=$1; if($1<min) min=$1; if($1>max) max=$1} END {print "Average: " sum/NR ", Min: " min ", Max: " max}' >> "$report_file"
-        echo '```' >> "$report_file"
+        {
+            echo '```bash'
+            echo "# Run queue statistics"
+            tail -10 "${output_dir}/kernel_metrics/kernel_metrics.csv" | cut -d',' -f2 | awk '{sum+=$1; if(NR==1) min=$1; if($1<min) min=$1; if($1>max) max=$1} END {print "Average: " sum/NR ", Min: " min ", Max: " max}'
+            echo '```'
+        } >> "$report_file"
     fi
 
-    cat >> "$report_file" << EOF
-
-### Context Switch Analysis
-High context switches indicate scheduler thrashing or excessive I/O waits.
-
-EOF
-
     if [ -f "${output_dir}/kernel_metrics/process_metrics.csv" ]; then
-        echo '```bash' >> "$report_file"
-        echo "# Process context switches (last 10 samples)" >> "$report_file"
-        tail -10 "${output_dir}/kernel_metrics/process_metrics.csv" | cut -d',' -f17,18 | awk -F, '{vol+=$1; nonvol+=$2} END {print "Voluntary: " vol ", Non-voluntary: " nonvol}' >> "$report_file"
-        echo '```' >> "$report_file"
+        {
+            echo '```bash'
+            echo "# Process context switches (last 10 samples)"
+            tail -10 "${output_dir}/kernel_metrics/process_metrics.csv" | cut -d',' -f17,18 | awk -F, '{vol+=$1; nonvol+=$2} END {print "Voluntary: " vol ", Non-voluntary: " nonvol}'
+            echo '```'
+        } >> "$report_file"
     fi
 
     cat >> "$report_file" << EOF
@@ -274,49 +325,35 @@ Page faults indicate memory pressure and access patterns.
 EOF
 
     if [ -f "${output_dir}/kernel_metrics/kernel_metrics.csv" ]; then
-        echo '```bash' >> "$report_file"
-        echo "# Major page faults (last 10 samples)" >> "$report_file"
-        tail -10 "${output_dir}/kernel_metrics/kernel_metrics.csv" | cut -d',' -f14 | awk '{sum+=$1} END {print "Total Major Page Faults: " sum}' >> "$report_file"
-        echo '```' >> "$report_file"
+        {
+            echo '```bash'
+            echo "# Major page faults (last 10 samples)"
+            tail -10 "${output_dir}/kernel_metrics/kernel_metrics.csv" | cut -d',' -f14 | awk '{sum+=$1} END {print "Total Major Page Faults: " sum}'
+            echo '```'
+        } >> "$report_file"
     fi
 
-    cat >> "$report_file" << EOF
+    {
+        echo "### TCP Performance"
+        echo '```bash'
+        echo "# TCP Retransmission Rate"
+        tail -10 "${output_dir}/kernel_metrics/network_stack.csv" | awk -F, '{retrans+=$7; out+=$8} END {if(out>0) print "Retransmission Rate: " (retrans/out*100) "%"; else print "No outbound traffic"}'
+        echo '```'
+    } >> "$report_file"
 
----
-
-## Network Stack Analysis
-
-### TCP Performance
-EOF
-
-    if [ -f "${output_dir}/kernel_metrics/network_stack.csv" ]; then
-        echo '```bash' >> "$report_file"
-        echo "# TCP Retransmission Rate" >> "$report_file"
-        tail -10 "${output_dir}/kernel_metrics/network_stack.csv" | awk -F, '{retrans+=$7; out+=$8} END {if(out>0) print "Retransmission Rate: " (retrans/out*100) "%"; else print "No outbound traffic"}' >> "$report_file"
-        echo '```' >> "$report_file"
-    fi
-
-    cat >> "$report_file" << EOF
-
----
-
-## Block I/O Analysis
-
-### I/O Latency Patterns
-EOF
-
-    if [ -f "${output_dir}/kernel_metrics/block_io.csv" ]; then
-        echo '```bash' >> "$report_file"
-        echo "# I/O Operations Summary" >> "$report_file"
+    {
+        echo "### I/O Latency Patterns"
+        echo '```bash'
+        echo "# I/O Operations Summary"
         tail -10 "${output_dir}/kernel_metrics/block_io.csv" | awk -F, '{read+=$2; write+=$3; read_bytes+=$4; write_bytes+=$5; read_time+=$6; write_time+=$7} END {
             if(read>0) print "Read IOPS: " read ", Avg Read Latency: " (read_time/read) "ms";
             if(write>0) print "Write IOPS: " write ", Avg Write Latency: " (write_time/write) "ms";
             print "Total Read: " (read_bytes/1024/1024) "MB, Total Write: " (write_bytes/1024/1024) "MB"
-        }' >> "$report_file"
-        echo '```' >> "$report_file"
-    fi
+        }'
+        echo '```'
+    } >> "$report_file"
 
-    cat >> "$report_file" << EOF
+    cat >> "$report_file" << 'EOF'
 
 ---
 

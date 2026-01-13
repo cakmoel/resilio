@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 set -euo pipefail
 
 # =============================================================================
@@ -19,16 +20,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Load enhanced configuration
+# shellcheck source=config/dlt.conf
 source "$BASE_DIR/config/dlt.conf"
+# shellcheck source=config/dlt_gregg.conf
 source "$BASE_DIR/config/dlt_gregg.conf"
 
 # SOURCES - Enhanced with Gregg's modules
+# shellcheck source=lib/parser.sh
 source "$BASE_DIR/lib/parser.sh"
+# shellcheck source=lib/stats.sh
 source "$BASE_DIR/lib/stats.sh"
+# shellcheck source=lib/normality.sh
 source "$BASE_DIR/lib/normality.sh"
+# shellcheck source=lib/runner.sh
 source "$BASE_DIR/lib/runner.sh"
+# shellcheck source=lib/report.sh
 source "$BASE_DIR/lib/report.sh"
+# shellcheck source=lib/gregg_profiling.sh
 source "$BASE_DIR/lib/gregg_profiling.sh"
+# shellcheck source=lib/kernel_metrics.sh
 source "$BASE_DIR/lib/kernel_metrics.sh"
 
 # Detect environment
@@ -49,7 +59,8 @@ detect_target_pid() {
     
     # Common web server processes
     for process in "apache2" "httpd" "nginx" "node" "php-fpm" "gunicorn" "uwsgi"; do
-        local pids=$(pgrep "$process" 2>/dev/null || true)
+        local pids
+        pids=$(pgrep "$process" 2>/dev/null || true)
         if [[ -n "$pids" ]]; then
             web_server_pids="$pids"
             break
@@ -70,10 +81,10 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 # Environment-specific baseline directories
 if [[ "$APP_ENV" == "production" ]]; then
     BASELINE_DIR="${BASE_DIR}/baselines"
-    BASELINE_PREFIX="production"
     USE_GIT_TRACKING=true
 else
     BASELINE_DIR="${BASE_DIR}/.dlt_local"
+    # shellcheck disable=SC2034
     BASELINE_PREFIX="${APP_ENV}"
     USE_GIT_TRACKING=false
 fi

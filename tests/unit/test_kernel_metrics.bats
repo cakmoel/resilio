@@ -14,7 +14,7 @@ teardown() {
 }
 
 @test "Kernel metrics captures required system fields" {
-  capture_kernel_metrics "$TEST_TMP/kernel.csv"
+  capture_kernel_metrics_data "$TEST_TMP/kernel.csv"
   
   [ -f "$TEST_TMP/kernel.csv" ]
   
@@ -25,7 +25,7 @@ teardown() {
 }
 
 @test "Kernel metrics includes context switches" {
-  capture_kernel_metrics "$TEST_TMP/kernel.csv"
+  capture_kernel_metrics_data "$TEST_TMP/kernel.csv"
   
   local ctxt
   ctxt=$(head -1 "$TEST_TMP/kernel.csv" | cut -d',' -f5)
@@ -36,7 +36,7 @@ teardown() {
 }
 
 @test "Kernel metrics includes memory vmstat data" {
-  capture_kernel_metrics "$TEST_TMP/kernel.csv"
+  capture_kernel_metrics_data "$TEST_TMP/kernel.csv"
   
   local free_pages
   free_pages=$(head -1 "$TEST_TMP/kernel.csv" | cut -d',' -f8)

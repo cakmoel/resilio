@@ -5,11 +5,6 @@
 # =============================================================================
 
 # BASE_DIR is expected to be defined by the sourcing script (bin/dlt.sh)
-STATS_PY="${BASE_DIR}/lib/stats.py"
-
-if [[ ! -x "$STATS_PY" ]]; then
-    chmod +x "$STATS_PY" 2>/dev/null || true
-fi
 
 # Check for required tools
 check_gregg_tools() {
@@ -118,7 +113,7 @@ EOF
     fi
 }
 
-# I/O Analysis (Gregg's I/O tools)
+# I/O Analysis (Gregg's block I/O tools)
 start_io_profiling() {
     local output_dir="$1"
     
@@ -136,7 +131,7 @@ tracepoint:block:block_rq_complete {
     $start = @start[args->dev];
     if ($start) {
         $latency = nsecs - $start;
-        @latency[args->dev] = hist($latency / 1000);
+        @latency[args->dev] = hist($latency / 1000); // Convert to microseconds
         delete(@start[args->dev]);
     }
 }
@@ -190,7 +185,7 @@ capture_gregg_system_metrics() {
     local procs_blocked
     procs_blocked=$(grep procs_blocked /proc/stat | awk '{print $2}')
     
-    # TCP stats
+    # TCP metrics
     local tcp_stats
     tcp_stats=$(grep -A1 Tcp: /proc/net/snmp | tail -1 | awk '{print $9","$10","$11","$12}')  # Active, passive, failed, resets
     
@@ -300,7 +295,7 @@ generate_gregg_analysis_report() {
     local scenario_name="$2"
     local report_file="${output_dir}/gregg_comprehensive_analysis_${scenario_name}.md"
     
-    cat > "$report_file" << 'EOF'
+    cat > "$report_file" << EOF
 # Brendan Gregg's System Performance Analysis
 
 **Scenario:** $scenario_name  
@@ -400,8 +395,6 @@ EOF
         } >> "$report_file"
     fi
 
-    cat >> "$report_file" << 'EOF'
-
 ---
 
 ## System-Level Correlations
@@ -423,7 +416,7 @@ This analysis correlates HTTP performance metrics with system-level indicators f
 
 ## Recommendations
 
-Based on Brendan Gregg's methodology:
+Based on Brendan Gregg methodology:
 
 1. **CPU Optimization**: [Analyze CPU profiling data for hotspots]
 2. **Memory Tuning**: [Monitor page fault patterns for memory pressure]
