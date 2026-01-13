@@ -2,6 +2,20 @@
 
 We are excited that you want to contribute to Resilio! To maintain the integrity of our performance metrics and the reliability of our scripts, please follow these guidelines.
 
+## 🔒 Branch Protection
+
+This repository enforces strict branch protection on the `main` branch to ensure code quality:
+
+- **Required**: All PRs must pass CI (tests + linting)
+- **Reviews**: 1 approval required from maintainers  
+- **Admins**: No bypass - even repository admins must follow rules
+- **History**: Linear history required (no merge commits)
+- **Protection**: Force pushes and deletions blocked
+
+**Workflow**: All changes go through PRs, no direct pushes to main.
+
+See `.github/branch-protection.md` for detailed rules and setup instructions.
+
 ## Code Quality Standards
 
 ### General Principles

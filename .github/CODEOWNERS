@@ -1,0 +1,48 @@
+# CODEOWNERS file for Resilio Load Testing Suite
+# Defines who owns which parts of the codebase for PR reviews
+
+# Global owners - can approve changes to any file
+* @alanmoe
+
+# Critical security files - require extra scrutiny
+SECURITY.md
+.github/workflows/
+lib/stats.py
+bin/dlt.sh
+bin/slt.sh
+
+# Statistical engine - expert review needed
+lib/stats.py
+tests/unit/test_stats.py
+
+# CI/CD workflows - infra review needed
+.github/workflows/
+Makefile
+
+# Documentation - content review
+docs/
+*.md
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Configuration files
+config/
+*.conf
+*.yml
+*.yaml
+
+# Test files
+tests/
+*.bats
+*.py
+
+# Libraries and scripts
+lib/
+bin/
+
+# Exclude temporary and generated files
+*.tmp
+*.log
+reports/
+__pycache__/
