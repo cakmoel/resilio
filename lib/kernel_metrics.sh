@@ -339,9 +339,7 @@ EOF
         echo "# TCP Retransmission Rate"
         tail -10 "${output_dir}/kernel_metrics/network_stack.csv" | awk -F, '{retrans+=$7; out+=$8} END {if(out>0) print "Retransmission Rate: " (retrans/out*100) "%"; else print "No outbound traffic"}'
         echo '```'
-    } >> "$report_file"
 
-    {
         echo "### I/O Latency Patterns"
         echo '```bash'
         echo "# I/O Operations Summary"
