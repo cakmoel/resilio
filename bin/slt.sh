@@ -31,6 +31,7 @@ ITERATIONS=${ITERATIONS:-1000}
 AB_REQUESTS=${AB_REQUESTS:-100}
 AB_CONCURRENCY=${AB_CONCURRENCY:-10}
 AB_TIMEOUT=${AB_TIMEOUT:-30}
+ITERATION_DELAY_SECONDS=${ITERATION_DELAY_SECONDS:-0} # NEW: Delay between iterations
 
 # Output directory for results
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -179,6 +180,7 @@ main() {
     echo "  - Requests per test: $AB_REQUESTS"
     echo "  - Concurrency level: $AB_CONCURRENCY"
     echo "  - Test timeout: ${AB_TIMEOUT}s"
+    echo "  - Iteration delay: ${ITERATION_DELAY_SECONDS}s"
     echo "  - Output directory: $OUTPUT_DIR"
     echo "======================================================================"
     echo ""
@@ -238,6 +240,12 @@ main() {
         # Progress indicator every 100 iterations
         if (( i % 100 == 0 )); then
             echo "Progress: $((i * 100 / ITERATIONS))% complete"
+        fi
+
+        # Add a delay between iterations if configured (NEW)
+        if [ "$ITERATION_DELAY_SECONDS" -gt 0 ]; then
+            log_to_file "Sleeping for ${ITERATION_DELAY_SECONDS} seconds before next iteration."
+            sleep "$ITERATION_DELAY_SECONDS"
         fi
     done
     
