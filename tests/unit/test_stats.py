@@ -3,9 +3,13 @@ import sys
 import os
 import statistics
 
-# Add lib to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../lib')))
-import stats
+# Add project root to path to import lib.stats
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Import from lib directory
+from lib import stats
 
 class TestStats(unittest.TestCase):
     def setUp(self):
@@ -28,7 +32,7 @@ class TestStats(unittest.TestCase):
         self.assertEqual(status, "approximately_normal")
 
     def test_welchs_t_test(self):
-        t, df, status = stats.welchs_t_test(self.data1, self.data2)
+        t, df, _, status = stats.welchs_t_test(self.data1, self.data2)
         self.assertEqual(status, "success")
         self.assertTrue(t < 0) # Data1 mean is much smaller than Data2
 

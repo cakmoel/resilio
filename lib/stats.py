@@ -7,7 +7,7 @@ import json
 def calculate_stats(values):
     """Returns basic stats for a sequence of numbers."""
     if not values:
-        return [0] * 10
+        return [0.0] * 10
     
     n = len(values)
     mean = statistics.mean(values)
@@ -17,8 +17,8 @@ def calculate_stats(values):
         stdev = statistics.stdev(values)
         variance = statistics.variance(values)
     else:
-        stdev = 0
-        variance = 0
+        stdev = 0.0
+        variance = 0.0
         
     min_val = min(values)
     max_val = max(values)
@@ -29,11 +29,12 @@ def calculate_stats(values):
     p99 = sorted_vals[int(0.99 * (n - 1))]
     
     # 95% Confidence Interval
-    confidence_margin = 1.96 * (stdev / math.sqrt(n)) if n > 0 else 0
+    confidence_margin = 1.96 * (stdev / math.sqrt(n)) if n > 0 else 0.0
     ci_lower = mean - confidence_margin
     ci_upper = mean + confidence_margin
     
-    return [mean, median, stdev, min_val, max_val, p90, p95, p99, ci_lower, ci_upper]
+    return [float(mean), float(median), float(stdev), float(min_val), float(max_val), 
+            float(p90), float(p95), float(p99), float(ci_lower), float(ci_upper)]
 
 def check_normality(values):
     """Returns normality status and skew/kurtosis (D'Agostino's approach)."""
@@ -59,23 +60,23 @@ def welchs_t_test(v1, v2):
     """Performs Welch's t-test for unequal variances."""
     n1, n2 = len(v1), len(v2)
     if n1 < 2 or n2 < 2:
-        return 0, 0, 0, "insufficient_data"
+        return 0.0, 0.0, 0.0, "insufficient_data"
     
     m1, m2 = statistics.mean(v1), statistics.mean(v2)
     s1_sq, s2_sq = statistics.variance(v1), statistics.variance(v2)
     
     se = math.sqrt((s1_sq / n1) + (s2_sq / n2))
     if se == 0:
-        return 0, 0, 999, "zero_variance"
+        return 0.0, 0.0, 999.0, "zero_variance"
     
     t_stat = (m1 - m2) / se
     
     # Degrees of freedom (Welch-Satterthwaite)
     num = (s1_sq/n1 + s2_sq/n2)**2
     den = (s1_sq/n1)**2 / (n1-1) + (s2_sq/n2)**2 / (n2-1)
-    df = num / den if den > 0 else 30
+    df = num / den if den > 0 else 30.0
     
-    return t_stat, df, "success"
+    return t_stat, df, 0.0, "success"
 
 def mann_whitney_u_test(v1, v2):
     """Performs Mann-Whitney U test with O(N log N) rank calculation."""
@@ -186,8 +187,8 @@ def main():
             data = [float(x) for x in sys.stdin.read().split()]
             results = calculate_stats(data)
             # Add variance at the end for internal use
-            v = statistics.variance(data) if len(data) > 1 else 0
-            results.append(v)
+            v = statistics.variance(data) if len(data) > 1 else 0.0
+            results.append(float(v))
             print("|".join(f"{x:.6f}" if isinstance(x, float) else str(x) for x in results))
             
         elif cmd == "check_normality":
@@ -205,7 +206,7 @@ def main():
             s2_status, s2_skew, s2_kurt = check_normality(v2)
             
             if s1_status == "approximately_normal" and s2_status == "approximately_normal":
-                t, df, status = welchs_t_test(v1, v2)
+                t, df, _, status = welchs_t_test(v1, v2)
                 p = t_to_pvalue(t, df)
                 m1, m2 = statistics.mean(v1), statistics.mean(v2)
                 v1_var, v2_var = statistics.variance(v1), statistics.variance(v2)
