@@ -35,4 +35,4 @@ jobs:
       - name: Unit tests (Bats)
         run: |
           export BASE_DIR=$GITHUB_WORKSPACE
-          bats tests/unit/test_stats.bats
+          make test-unit
