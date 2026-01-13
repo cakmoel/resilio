@@ -63,7 +63,7 @@ This will introduce a 5-second pause after all scenarios within a single iterati
 
 ## Core Engines
 
-### Resilio SLT (Simple Load Testing) - `bin/slt.sh` v2.2 (Suite v6.3)
+### Resilio SLT (Simple Load Testing) - `bin/slt.sh` v2.3 (Suite v6.3)
 
 The **SLT engine** is optimized for agile development cycles and rapid feedback. Perfect for:
 
@@ -82,7 +82,7 @@ The **SLT engine** is optimized for agile development cycles and rapid feedback.
 
 ---
 
-### Resilio DLT (Deep Load Testing) - `bin/dlt.sh` v6.2
+### Resilio DLT (Deep Load Testing) - `bin/dlt.sh` v6.3
 
 The **DLT engine** is a research-grade powerhouse designed for rigorous statistical analysis. Perfect for:
 
@@ -197,10 +197,10 @@ git clone https://github.com/cakmoel/resilio.git
 cd resilio
 
 # 2. Make scripts executable
-chmod +x slt.sh dlt.sh
+chmod +x bin/slt.sh bin/dlt.sh
 
 # 3. Configure test scenarios (edit the SCENARIOS section)
-nano dlt.sh  # or slt.sh
+nano bin/dlt.sh  # or bin/slt.sh
 ```
 
 ### Basic Usage
@@ -209,20 +209,20 @@ nano dlt.sh  # or slt.sh
 
 ```bash
 # Default: 1000 iterations, 100 requests/test, 10 concurrent users
-./slt.sh
+./bin/slt.sh
 
 # Custom parameters
-ITERATIONS=500 AB_REQUESTS=50 AB_CONCURRENCY=5 ./slt.sh
+ITERATIONS=500 AB_REQUESTS=50 AB_CONCURRENCY=5 ./bin/slt.sh
 
 # With iteration delay
-ITERATION_DELAY_SECONDS=5 ITERATIONS=100 AB_REQUESTS=10 AB_CONCURRENCY=2 ./slt.sh
+ITERATION_DELAY_SECONDS=5 ITERATIONS=100 AB_REQUESTS=10 AB_CONCURRENCY=2 ./bin/slt.sh
 ```
 
 **Deep Load Testing (DLT):**
 
 ```bash
 # Research-based three-phase test with automatic statistical test selection
-./dlt.sh
+./bin/dlt.sh
 
 # Results include hypothesis testing against baseline
 cat load_test_reports_*/hypothesis_testing_*.md
@@ -396,7 +396,7 @@ skewed data, making it ideal for tail latency metrics (P95/P99).
 Both scripts use a `SCENARIOS` associative array:
 
 ```bash
-# Edit slt.sh or dlt.sh
+# Edit bin/slt.sh or bin/dlt.sh
 declare -A SCENARIOS=(
     ["Homepage"]="http://localhost:8000/"
     ["API_Users"]="http://localhost:8000/api/users"
@@ -416,7 +416,7 @@ AB_TIMEOUT=30            # Timeout in seconds
 **Example:**
 
 ```bash
-ITERATIONS=500 AB_CONCURRENCY=20 ./slt.sh
+ITERATIONS=500 AB_CONCURRENCY=20 ./bin/slt.sh
 ```
 
 ### Environment Configuration (DLT)
@@ -431,7 +431,7 @@ echo "APP_ENV=production" > .env
 echo 'STATIC_PAGE=https://prod.example.com/' >> .env
 echo 'DYNAMIC_PAGE=https://prod.example.com/api/users' >> .env
 
-./dlt.sh
+./bin/dlt.sh
 ```
 
 Baselines saved to: `./baselines/` (Git-tracked)
@@ -440,7 +440,7 @@ Baselines saved to: `./baselines/` (Git-tracked)
 
 ```bash
 echo "APP_ENV=local" > .env
-./dlt.sh
+./bin/dlt.sh
 ```
 
 Baselines saved to: `./.dlt_local/` (not Git-tracked)
@@ -472,10 +472,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y apache2-utils bc sysstat
       
-      - name: Run Load Test (v6.2 with automatic test selection)
+      - name: Run Load Test (v6.3 with automatic test selection)
         run: |
-          chmod +x dlt.sh
-          ./dlt.sh
+          chmod +x bin/dlt.sh
+          ./bin/dlt.sh
       
       - name: Check for Regressions
         run: |
@@ -537,7 +537,7 @@ Mann-Whitney U test is **more reliable** than Welch's t-test when:
 ```bash
 # 1. Establish baseline during stable period
 echo "APP_ENV=production" > .env
-./dlt.sh
+./bin/dlt.sh
 
 # 2. Commit baselines to Git
 git add baselines/
@@ -545,8 +545,8 @@ git commit -m "chore: establish performance baseline for release v2.0"
 git push
 
 # 3. Future tests automatically compare against this baseline
-./dlt.sh
-# v6.1 automatically selects best statistical test!
+./bin/dlt.sh
+# v6.3 automatically selects best statistical test!
 
 # 4. Check results
 cat load_test_reports_*/hypothesis_testing_*.md
@@ -562,7 +562,7 @@ cat load_test_reports_*/hypothesis_testing_*.md
 
 ```bash
 # Solution A: Use C locale
-LC_NUMERIC=C ./dlt.sh
+LC_NUMERIC=C ./bin/dlt.sh
 
 # Solution B: Install en_US.UTF-8
 sudo locale-gen en_US.UTF-8
@@ -582,7 +582,7 @@ sudo ufw status
 
 ```bash
 # Increase timeout or reduce concurrency
-AB_TIMEOUT=60 AB_CONCURRENCY=5 ./slt.sh
+AB_TIMEOUT=60 AB_CONCURRENCY=5 ./bin/slt.sh
 ```
 
 **4. Too Many Open Files**
@@ -610,43 +610,41 @@ ulimit -n 10000
 
 ---
 
-## Upgrading from v6.1 to v6.2
+## Upgrading from v6.2 to v6.3
 
 ### Migration Guide
 
 -  **Zero-Risk Upgrade - 100% Backward Compatible**
 
 ```bash
-# 1. Backup v6.1 (optional - recommended)
-cp dlt.sh dlt_v6.1_backup.sh
+# 1. Backup v6.2 (optional - recommended)
+cp bin/slt.sh bin/slt_v6.2_backup.sh
 
-# 2. Replace with v6.2
-# Download new dlt.sh from repository
-chmod +x dlt.sh
+# 2. Replace with v6.3
+# Download new slt.sh from repository
+chmod +x bin/slt.sh
 
-# 3. Test (works identically to v6.1)
-./dlt.sh
+# 3. Test (works identically to v6.2)
+./bin/slt.sh
 
-# 4. Check enhanced features
-cat load_test_reports_*/hypothesis_testing_*.md
-# Look for "Test Used:" section (new in v6.2)
+# 4. Try new iteration delay feature
+ITERATION_DELAY_SECONDS=5 ./bin/slt.sh
 ```
 
 ### What Changed
 
 **Same (100% compatible):**
--  CLI commands
+-  All CLI commands for both SLT and DLT
 -  Baseline file format
--  Environment variables
+-  Environment variables  
 -  Report locations
--  All v6.1 functionality
+-  All v6.2 functionality
 
-**Enhanced (automatic improvements):**
--  Python-powered math engine (40x faster)
--  Better accuracy for tail latencies
--  Robust handling of outliers
--  Distribution analysis in reports
--  Automatic optimal test selection
+**Enhanced (SLT only):**
+-  Iteration delay support for rate limiting
+-  Configurable pacing between test cycles
+-  Better control for system under test stability
+-  Improved simulation of realistic user behavior
 
 **No configuration changes needed!**
 
@@ -663,7 +661,7 @@ cat load_test_reports_*/hypothesis_testing_*.md
 
 ## Research Foundations
 
-Resilio v6.2 implements methodologies from:
+Resilio v6.3 implements methodologies from:
 
 ### Original Foundations (v6.0 & v6.1)
 - **Jain, R. (1991)** - Statistical methods for performance measurement
@@ -684,20 +682,20 @@ Resilio v6.2 implements methodologies from:
 
 ## Version Comparison
 
-| Feature | v6.0 | v6.1 | v6.2 |
-|---------|------|------|------|
-| Welch's t-test | ✅ | ✅ | ✅ |
-| Mann-Whitney U | ❌ | ✅ | ✅ |
-| Automatic test selection | ❌ | ✅ | ✅ |
-| Normality checking | ❌ | ✅ | ✅ |
-| Cohen's d | ✅ | ✅ | ✅ |
-| Rank-biserial r | ❌ | ✅ | ✅ |
-| Baseline management | ✅ | ✅ | ✅ |
-| Smart locale detection | ✅ | ✅ | ✅ |
-| Python Math Engine (40x) | ❌ | ❌ | ✅ |
-| Iteration Delay (Rate Limiting) | ❌ | ❌ | ✅ |
-| Best for tail latencies | ⚠️ | ✅ | ✅ |
-| Handles outliers | ⚠️ | ✅ | ✅ |
+| Feature | v6.0 | v6.1 | v6.2 | v6.3 |
+|---------|------|------|------|------|
+| Welch's t-test | ✅ | ✅ | ✅ | ✅ |
+| Mann-Whitney U | ❌ | ✅ | ✅ | ✅ |
+| Automatic test selection | ❌ | ✅ | ✅ | ✅ |
+| Normality checking | ❌ | ✅ | ✅ | ✅ |
+| Cohen's d | ✅ | ✅ | ✅ | ✅ |
+| Rank-biserial r | ❌ | ✅ | ✅ | ✅ |
+| Baseline management | ✅ | ✅ | ✅ | ✅ |
+| Smart locale detection | ✅ | ✅ | ✅ | ✅ |
+| Python Math Engine (40x) | ❌ | ❌ | ✅ | ✅ |
+| Iteration Delay (Rate Limiting) | ❌ | ❌ | ❌ | ✅ |
+| Best for tail latencies | ⚠️ | ✅ | ✅ | ✅ |
+| Handles outliers | ⚠️ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -742,17 +740,17 @@ Copyright © 2025 M.Noermoehammad
 If you use Resilio in academic research, please cite:
 
 ```bibtex
-@software{resilio2025,
+@software{resilio2026,
   author = {Noermoehammad, M.},
   title = {Resilio: Research-Based Performance Testing Suite},
-  year = {2025},
-  version = {6.3},
+  year = {2026},
+  version = {6.3.0},
   url = {https://github.com/cakmoel/resilio}
 }
 ```
 
 ---
 
-**Resilio v6.2: Built for Speed, Tested for Durability, Proven by Science**
+**Resilio v6.3: Built for Speed, Tested for Durability, Proven by Science**
 
-*Now with automatic statistical test selection for maximum accuracy.*
+*Now with iteration delay control for realistic load testing.*
