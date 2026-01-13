@@ -43,7 +43,7 @@ Resilio now uses a two-tier release system for enhanced security:
 ```bash
 export RELEASE_VERSION=6.3.0
 export GITHUB_REPOSITORY=cakmoel/resilio
-./release.sh
+../resilio-private-tools/release.sh
 ```
 
 ### Security Limitations
@@ -87,7 +87,7 @@ export GITHUB_REPOSITORY=cakmoel/resilio
    ```
 2. **Run local helper**:
    ```bash
-   ./release.sh
+   ../resilio-private-tools/release.sh
    ```
 3. **Manual upload**: Upload created archives to GitHub
 
@@ -98,7 +98,9 @@ export GITHUB_REPOSITORY=cakmoel/resilio
 ├── ci.yml          # CI/CD pipeline
 └── release.yml     # Secure production releases
 
-release.sh          # Local development helper (DEPRECATED for production)
+../resilio-private-tools/
+├── release.sh      # Private local development helper
+└── README.md       # Security documentation
 ```
 
 ## Best Practices

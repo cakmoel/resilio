@@ -8,7 +8,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-# release.sh - Now tracked for development use (see docs/RELEASE_SECURITY.md) 
+# release.sh - Moved to private location for security (see docs/RELEASE_SECURITY.md)
+release.sh 
 ## =============================================================================
 # TEST REPORTS (Always local)
 # =============================================================================

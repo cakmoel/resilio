@@ -239,8 +239,9 @@ Statistical accuracy is more important than code simplicity. Follow academic sta
 - Secure, permission-based releases
 - See `docs/RELEASE_SECURITY.md` for details
 
-**Local Testing Only**: `RELEASE_VERSION=X.Y.Z GITHUB_REPOSITORY=user/repo ./release.sh`
+**Local Testing Only**: `RELEASE_VERSION=X.Y.Z GITHUB_REPOSITORY=user/repo ../resilio-private-tools/release.sh`
 - For development and validation only
+- Moved to private location for security
 - No automated GitHub releases
 - Requires environment variables
 
