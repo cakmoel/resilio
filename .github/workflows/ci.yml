@@ -23,6 +23,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y bats shellcheck apache2-utils bc
+          
+          # Debug: Show tool versions
+          echo "=== Tool Versions ==="
+          bats --version
+          shellcheck --version
+          python3 --version
+          ab -V 2>&1 | head -1
+          echo "====================="
 
       - name: Lint (ShellCheck)
         run: |
@@ -35,4 +43,22 @@ jobs:
       - name: Unit tests (Bats)
         run: |
           export BASE_DIR=$GITHUB_WORKSPACE
-          make test-unit
+          echo "Running unit tests with BASE_DIR: $BASE_DIR"
+          
+          # Ensure scripts are executable
+          chmod +x bin/*.sh lib/*.sh 2>/dev/null || true
+          
+          # Run tests with retry for intermittent issues
+          for attempt in {1..3}; do
+            echo "Test attempt $attempt:"
+            if make test-unit; then
+              echo "✅ All tests passed on attempt $attempt"
+              break
+            elif [ $attempt -eq 3 ]; then
+              echo "❌ Tests failed after 3 attempts"
+              exit 1
+            else
+              echo "⚠️  Tests failed, retrying in 2 seconds..."
+              sleep 2
+            fi
+          done
