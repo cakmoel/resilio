@@ -7,24 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [6.2.2] - 2026-01-10
-
-### Fixed
-
-- **CLI Execution**: Resolved issue where `dlt.sh --dry-run` would hang indefinitely by implementing proper dry-run exit logic.
-- **Unit Testing**:
-  - Corrected sourcing of library files (`lib/normality.sh`, `lib/parser.sh`, `lib/stats.sh`) within Bats `bash -c` subshells, eliminating "command not found" errors.
-  - Implemented missing `choose_test` function in `lib/normality.sh`, which was a cause for unit test failures.
-  - Implemented missing `extract_samples` function in `lib/parser.sh`, resolving unit test failures.
-  - Standardized `BASE_DIR` and `PROJECT_ROOT` definitions across Bats test `setup()` functions for consistent and correct test environment setup.
-- **Code Quality**: Addressed multiple `shellcheck` warnings for improved script robustness and adherence to best practices:
-  - `SC2155`: Declare and assign separately to avoid masking return values.
-  - `SC2188`: Redirection without a command (fixed with `true >`).
-  - `SC2046`: Quote to prevent word splitting (in `sleep` command).
-  - `SC2206`: Quote to prevent word splitting/globbing in array expansion.
-
----
-
 ## [6.3.0] - 2026-01-13
 
 ### Added
@@ -35,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configurable via `ITERATION_DELAY_SECONDS=<seconds> ./bin/slt.sh`.
 
 ---
+
+## [6.2.2] - 2026-01-10
 
 ## [6.2.1] - 2026-01-10
 
