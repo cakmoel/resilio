@@ -12,7 +12,11 @@ __pycache__/
 release.sh
 
 # AGENTS.md - Internal development documentation (moved to private)
-AGENTS.md 
+AGENTS.md
+
+# scripts/ - Internal maintenance tools (moved to private)
+scripts/
+cleanup-workflows.sh 
 ## =============================================================================
 # TEST REPORTS (Always local)
 # =============================================================================

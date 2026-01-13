@@ -99,9 +99,10 @@ export GITHUB_REPOSITORY=cakmoel/resilio
 └── release.yml     # Secure production releases
 
 ../resilio-private-tools/
-├── release.sh      # Private local development helper
-├── AGENTS.md       # Internal development documentation  
-└── README.md       # Security documentation
+├── release.sh              # Private local development helper
+├── cleanup-workflows.sh     # GitHub Actions maintenance tool
+├── AGENTS.md               # Internal development documentation  
+└── README.md               # Security documentation
 ```
 
 ## Internal Development
