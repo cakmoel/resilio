@@ -2,36 +2,69 @@
 set -euo pipefail
 
 # =============================================================================
-# Resilio v6.2.2 Release - Quick Command Reference
+# Resilio Local Release Helper - DEVELOPMENT USE ONLY
 # =============================================================================
-# This script ASSUMES:
-# - You are on main
-# - CI is green
-# - Methodology + contract tests are locked
+# SECURITY NOTES:
+# - This script is for LOCAL TESTING only
+# - For production releases, use .github/workflows/release.yml
+# - Requires explicit environment variables for security
 # =============================================================================
 
-VERSION="6.3.0"
+# Security: Require explicit environment variables
+if [[ -z "${RELEASE_VERSION:-}" ]]; then
+  echo "❌ RELEASE_VERSION environment variable required"
+  echo "   Usage: RELEASE_VERSION=6.3.0 ./release.sh"
+  exit 1
+fi
+
+if [[ -z "${GITHUB_REPOSITORY:-}" ]]; then
+  echo "❌ GITHUB_REPOSITORY environment variable required"
+  echo "   Example: export GITHUB_REPOSITORY=cakmoel/resilio"
+  exit 1
+fi
+
+VERSION="$RELEASE_VERSION"
 TAG="v${VERSION}"
-REPO="cakmoel/resilio"
+REPO="$GITHUB_REPOSITORY"
 
-echo "=== Resilio Release ${TAG} ==="
+echo "=== Resilio LOCAL Release Helper ${TAG} ==="
+echo "⚠️  For production releases, use GitHub Actions workflow"
+echo ""
 
 # =============================================================================
-# STEP 0: Safety Checks
+# STEP 0: Enhanced Security Checks
 # =============================================================================
 
-echo "=== Step 0: Safety Checks ==="
+echo "=== Step 0: Security & Safety Checks ==="
 
+# Verify format
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "❌ Invalid version format. Use X.Y.Z"
+  exit 1
+fi
+
+# Branch check
 CURRENT_BRANCH=$(git branch --show-current)
 if [[ "$CURRENT_BRANCH" != "main" ]]; then
   echo "❌ You must be on main to release (current: $CURRENT_BRANCH)"
   exit 1
 fi
 
+# Working tree check
 git diff --quiet || {
   echo "❌ Working tree not clean"
   exit 1
 }
+
+# Tag existence check
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+  echo "❌ Tag $TAG already exists"
+  exit 1
+fi
+
+# Confirm local development use
+read -r -p "This is for LOCAL TESTING only. Continue? (y/N): " LOCAL_CONFIRM
+[[ "$LOCAL_CONFIRM" == "y" ]] || exit 1
 
 # =============================================================================
 # STEP 1: Pre-Release Verification
@@ -92,7 +125,7 @@ echo "=== Step 3: Release Commit Check ==="
 echo "Latest commit:"
 git log --oneline -1
 
-read -p "Proceed with tagging ${TAG}? (y/N): " CONFIRM
+read -r -p "Proceed with tagging ${TAG}? (y/N): " CONFIRM
 [[ "$CONFIRM" == "y" ]] || exit 1
 
 # =============================================================================
@@ -169,24 +202,22 @@ zip -r "${ARCHIVE_BASE}.zip" \
 ls -lh "${ARCHIVE_BASE}".*
 
 # =============================================================================
-# STEP 6: GitHub Release (CLI)
+# STEP 6: SECURITY WARNING - No Automated GitHub Release
 # =============================================================================
 
 echo ""
-echo "=== Step 6: GitHub Release ==="
+echo "=== Step 6: Security Notice ==="
 
-if command -v gh >/dev/null; then
-  gh release create "${TAG}" \
-    --repo "${REPO}" \
-    --title "Resilio ${TAG} – Reproducible Performance Auditing" \
-    --notes-file docs/methods.md \
-    "${ARCHIVE_BASE}.tar.gz" \
-    "${ARCHIVE_BASE}.zip"
-  echo "✓ GitHub release created"
-else
-  echo "⚠ gh not installed. Create release manually:"
-  echo "  https://github.com/${REPO}/releases/new"
-fi
+echo "⚠️  Automated GitHub release DISABLED for security"
+echo "   Use GitHub Actions workflow for production releases:"
+echo "   https://github.com/${REPO}/actions/workflows/release.yml"
+echo ""
+echo "📋 To create release manually:"
+echo "   1. Push tag: git push origin ${TAG}"
+echo "   2. Visit: https://github.com/${REPO}/releases/new"
+echo "   3. Upload archives: ${ARCHIVE_BASE}.*"
+echo ""
+echo "🔐 Security recommendation: Use GitHub Actions for automated releases"
 
 # =============================================================================
 # STEP 7: Verification

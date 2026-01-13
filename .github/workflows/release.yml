@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 6.3.0)'
+        required: true
+        type: string
+      confirm:
+        description: 'Type "release" to confirm'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event.inputs.confirm == 'release'
+    
+    permissions:
+      contents: write
+      releases: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for tagging
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats shellcheck apache2-utils bc jq
+
+      - name: Safety checks
+        run: |
+          # Check working tree is clean
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "❌ Working tree not clean"
+            exit 1
+          fi
+          
+          # Verify we're on main
+          if [[ $(git branch --show-current) != "main" ]]; then
+            echo "❌ Not on main branch"
+            exit 1
+          fi
+
+      - name: Validate version format
+        run: |
+          if [[ ! "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format. Use X.Y.Z"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: |
+          make lint
+          make test
+
+      - name: Create tag
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          TAG="v${VERSION}"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "❌ Tag $TAG already exists"
+            exit 1
+          fi
+          
+          # Create annotated tag
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Resilio $TAG: Reproducible Performance Auditing Toolkit
+
+          Summary of v$VERSION release:
+          - Automated release via GitHub Actions
+          - Full test suite validation
+          - Security-hardened release process
+
+          Key Highlights:
+          - Modular CLI + reusable statistical core
+          - Welch vs Mann–Whitney selection (Ruxton-aligned)
+          - Contract-locked statistical methodology
+          - CI-enforced reproducibility
+
+          Statistical foundations:
+          - Welch (1947)
+          - Mann & Whitney (1947)
+          - Ruxton (2006)"
+          
+          git push origin "$TAG"
+
+      - name: Create release archives
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          TAG="v${VERSION}"
+          ARCHIVE_BASE="resilio-${TAG}"
+          
+          tar -czf "${ARCHIVE_BASE}.tar.gz" \
+            bin lib config docs Makefile README.md LICENSE.md \
+            SECURITY.md CODE_OF_CONDUCT.md CHANGELOG.md CONTRIBUTING.md .github
+          
+          zip -r "${ARCHIVE_BASE}.zip" \
+            bin lib config docs Makefile README.md LICENSE.md \
+            SECURITY.md CODE_OF_CONDUCT.md CHANGELOG.md CONTRIBUTING.md .github
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          release_name: Resilio v${{ github.event.inputs.version }} – Reproducible Performance Auditing
+          body_path: docs/methods.md
+          draft: false
+          prerelease: false
+          files: |
+            resilio-v${{ github.event.inputs.version }}.tar.gz
+            resilio-v${{ github.event.inputs.version }}.zip
+
+      - name: Verify release
+        run: |
+          sleep 5
+          VERSION="${{ github.event.inputs.version }}"
+          TAG="v${VERSION}"
+          
+          # Verify the release exists
+          curl -s "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" \
+            | jq -r '.tag_name'
+          
+          echo "✅ Release $TAG completed successfully"
