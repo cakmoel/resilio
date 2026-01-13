@@ -9,7 +9,10 @@ __pycache__/
 *.pyo
 *.pyd
 # release.sh - Moved to private location for security (see docs/RELEASE_SECURITY.md)
-release.sh 
+release.sh
+
+# AGENTS.md - Internal development documentation (moved to private)
+AGENTS.md 
 ## =============================================================================
 # TEST REPORTS (Always local)
 # =============================================================================

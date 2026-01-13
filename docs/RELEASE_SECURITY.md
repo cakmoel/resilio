@@ -71,7 +71,7 @@ export GITHUB_REPOSITORY=cakmoel/resilio
 ## Migration Guide
 
 ### For Production Releases
-1. **Stop using**: `./release.sh` for production
+1. **Stop using**: `../resilio-private-tools/release.sh` for production
 2. **Start using**: GitHub Actions Release workflow
 3. **Benefits**: 
    - Automated testing validation
@@ -100,8 +100,14 @@ export GITHUB_REPOSITORY=cakmoel/resilio
 
 ../resilio-private-tools/
 ├── release.sh      # Private local development helper
+├── AGENTS.md       # Internal development documentation  
 └── README.md       # Security documentation
 ```
+
+## Internal Development
+
+For internal development commands, AI agent guidance, and detailed setup:
+See `../resilio-private-tools/AGENTS.md` (private documentation)
 
 ## Best Practices
 
