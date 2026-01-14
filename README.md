@@ -731,7 +731,7 @@ Copyright © 2025 M.Noermoehammad
 
 - **Issues**: [GitHub Issues](https://github.com/cakmoel/resilio/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/cakmoel/resilio/discussions)
-- **Email**: support@resilio-performance.dev
+- **Email**: alanmoehammad@gmail.com
 
 ---
 
