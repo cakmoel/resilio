@@ -2,14 +2,14 @@
 # shellcheck disable=SC2034
 
 # Base URL constants - change here to update all test targets
-BASE_URL_DYNAMIC="http://myblog.local"
-BASE_URL_STATIC="http://myblog.local"
-BASE_URL_ERROR="http://myblog.local"
+BASE_URL_DYNAMIC="http://localhost:8000"
+BASE_URL_STATIC="http://localhost:8000"
+BASE_URL_ERROR="http://localhost:8000"
 
 # URL path patterns
-DYNAMIC_PATH="/post/3/visiting-bali-a-journey-of-serenity-and-culture"
-STATIC_PATH="/login"
-ERROR_PATH="/this-is-not-real-page"
+DYNAMIC_PATH="/api/posts"
+STATIC_PATH="/"
+ERROR_PATH="/nonexistent-page"
 
 declare -A SCENARIOS=(
     ["DYNAMIC"]="${BASE_URL_DYNAMIC}${DYNAMIC_PATH}"
