@@ -48,10 +48,20 @@ if [[ -f "${BASE_DIR}/lib/workload.sh" ]]; then
     source "${BASE_DIR}/lib/workload.sh"
 else
     # Fallback to local placeholders if config is missing
+    # Base URL constants - change here to update all test targets
+    BASE_URL_DYNAMIC="http://myblog.local"
+    BASE_URL_STATIC="http://myblog.local"
+    BASE_URL_ERROR="http://myblog.local"
+
+    # URL path patterns
+    DYNAMIC_PATH="/post/3/visiting-bali-a-journey-of-serenity-and-culture"
+    STATIC_PATH="/login"
+    ERROR_PATH="/this-is-not-real-page"
+
     declare -A SCENARIOS=(
-        ["DYNAMIC"]="http://myblog.local/post/3/visiting-bali-a-journey-of-serenity-and-culture"
-        ["STATIC"]="http://myblog.local/login"
-        ["404_ERROR"]="http://myblog.local/this-is-not-real-page"
+        ["DYNAMIC"]="${BASE_URL_DYNAMIC}${DYNAMIC_PATH}"
+        ["STATIC"]="${BASE_URL_STATIC}${STATIC_PATH}"
+        ["404_ERROR"]="${BASE_URL_ERROR}${ERROR_PATH}"
     )
 fi
 
