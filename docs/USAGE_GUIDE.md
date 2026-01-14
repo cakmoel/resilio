@@ -1,689 +1,610 @@
 # Resilio Usage Guide
 
-**Complete Guide to Simple and Deep Load Testing**
+**Easy Performance Testing for Your Website**
 
 ---
 
 ## Table of Contents
 
-1. [Understanding Resilio Architecture](#understanding-resilio-architecture)
-2. [SLT (Simple Load Testing) Deep Dive](#slt-simple-load-testing-deep-dive)
-3. [DLT (Deep Load Testing) Deep Dive](#dlt-deep-load-testing-deep-dive)
-4. [Real-World Workflows](#real-world-workflows)
-5. [Statistical Analysis Guide](#statistical-analysis-guide)
-6. [Baseline Management](#baseline-management)
-7. [Advanced Configuration](#advanced-configuration)
-8. [Troubleshooting](#troubleshooting)
-9. [Best Practices](#best-practices)
-10. [Appendix: Quick Reference](#appendix-quick-reference)
+1. [Quick Start - Test Your Website in 5 Minutes](#quick-start---test-your-website-in-5-minutes)
+2. [Understanding Your Test Results](#understanding-your-test-results)
+3. [SLT (Simple Load Testing) - For Everyday Testing](#slt-simple-load-testing---for-everyday-testing)
+4. [DLT (Deep Load Testing) - For Serious Analysis](#dlt-deep-load-testing---for-serious-analysis)
+5. [Common Testing Scenarios](#common-testing-scenarios)
+6. [When to Use Each Tool](#when-to-use-each-tool)
+7. [Troubleshooting Common Problems](#troubleshooting-common-problems)
+8. [Advanced Options (Optional)](#advanced-options-optional)
 
 ---
 
-## Understanding Resilio Architecture
+## Quick Start - Test Your Website in 5 Minutes
 
-### Philosophy
+### What is Performance Testing?
 
-Resilio is built on the principle that **performance testing should be both pragmatic and scientifically rigorous**. It provides two complementary tools:
+Performance testing tells you how many visitors your website can handle at once. It's like stress-testing your website to find its limits before real visitors experience problems.
 
-- **SLT (slt.sh)**: Fast, iterative testing for development cycles
-- **DLT (dlt.sh)**: Research-grade analysis for production validation
+### The Easy Way: SLT (Simple Load Testing)
 
-### Technology Stack
+**Perfect for:** Quick checks, everyday testing, non-technical users
 
-Both engines leverage:
+#### Step 1: Open Your Terminal
+```bash
+# Navigate to your project folder
+cd /path/to/your/project
+```
 
-- **ApacheBench (ab)**: Industry-standard HTTP benchmarking tool
-- **Python 3**: High-performance mathematical kernel for DLT statistics
-- **bc**: Legacy fallback for basic floating-point calculations
-- **Bash**: Orchestration and data processing
-- **GNU coreutils**: Text processing (awk, grep, sort)
+#### Step 2: Run the Test
+```bash
+# Just run this command - it's that simple!
+./bin/slt.sh
+```
 
-### What Gets Measured
+#### Step 3: Wait for Results
+- The test takes about 2-5 minutes
+- You'll see progress updates every few seconds
+- Results appear automatically when finished
 
-Both scripts measure:
-
-✅ **Throughput**: Requests per second (RPS)  
-✅ **Latency**: Response time distribution (P50, P95, P99)  
-✅ **Reliability**: Success rate and error tracking  
-✅ **Stability**: Coefficient of Variation (CV)  
-✅ **Bottlenecks**: Connection time vs processing time
-
-### What Does NOT Get Measured
-
-❌ Application-level code profiling  
-❌ Database query optimization  
-❌ Memory leaks (use language-specific profilers)  
-❌ Internal function call traces
-
-For internal profiling, use:
-- **PHP**: Xdebug, Blackfire
-- **Node.js**: `node --inspect`, clinic.js
-- **Python**: cProfile, py-spy
-- **Go**: pprof
-- **Java**: JProfiler, VisualVM
+#### Step 4: Read Your Results
+Look for the summary at the end - it tells you:
+- **How many visitors per second** your site can handle
+- **How fast** your pages load
+- **How reliable** your site is under load
 
 ---
 
-## SLT (Simple Load Testing) Deep Dive
+## Understanding Your Test Results
 
-### Overview
+### The Important Numbers
 
-**File**: `bin/slt.sh`  
-**Version**: 2.1 (Resilio Suite 6.2)  
-**Purpose**: Rapid performance feedback for agile development
-
-### Architecture
+When your test finishes, you'll see something like this:
 
 ```
-┌─────────────────────────────────────┐
-│     Configuration Loading           │
-│  (SCENARIOS, environment variables) │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Test Execution Loop                │
-│   (1000 iterations by default)       │
-│                                      │
-│   For each iteration:                │
-│     For each scenario:               │
-│       → Run ApacheBench              │
-│       → Parse output                 │
-│       → Track success/error          │
-│       → Store metrics                │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Statistical Analysis               │
-│   → Calculate mean, median, std dev  │
-│   → Compute percentiles (P50-P99)    │
-│   → Calculate CV (stability)         │
-│   → Separate errors from dataset     │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Report Generation                  │
-│   → Console summary                  │
-│   → Markdown report                  │
-│   → Raw data preservation            │
-└─────────────────────────────────────┘
-```
-
-### Configuration
-
-**Default Parameters:**
-
-```bash
-ITERATIONS=1000           # Total test iterations
-AB_REQUESTS=100           # Requests per iteration
-AB_CONCURRENCY=10         # Concurrent users
-AB_TIMEOUT=30             # Timeout in seconds
-ITERATION_DELAY_SECONDS=0 # Delay between iterations in seconds (0 for no delay)```
-
-**Customization:**
-
-```bash
-# Light testing (development)
-ITERATIONS=100 AB_REQUESTS=50 AB_CONCURRENCY=5 bin/slt.sh
-
-# Heavy testing (pre-production)
-ITERATIONS=2000 AB_REQUESTS=500 AB_CONCURRENCY=50 bin/slt.sh
-
-# API stress test
-ITERATIONS=1500 AB_REQUESTS=1000 AB_CONCURRENCY=100 bin/slt.sh
-```
-
-### Test Scenarios Configuration
-
-Edit the `SCENARIOS` array in `slt.sh` (around line 40):
-
-```bash
-declare -A SCENARIOS=(
-    ["Homepage"]="http://localhost:8000/"
-    ["API_Users"]="http://localhost:8000/api/users"
-    ["Checkout"]="http://localhost:8000/checkout"
-)
-```
-
-**Best Practices:**
-- Use descriptive scenario names (no spaces)
-- Test diverse endpoint types (static, dynamic, API)
-- Include critical user journeys
-- Test expected error cases (404, 500)
-
-### Rate Limiting / Iteration Delay (New in v6.3)
-
-To prevent overwhelming the system under test or to simulate more realistic traffic patterns, `slt.sh` now supports a configurable delay between test iterations.
-
-**Configuration:**
-
-```bash
-ITERATION_DELAY_SECONDS=0 # Delay between iterations in seconds (0 for no delay)
-```
-
-**Customization:**
-
-You can specify the delay by setting the `ITERATION_DELAY_SECONDS` environment variable:
-
-```bash
-# Introduce a 5-second delay between each iteration
-ITERATION_DELAY_SECONDS=5 ./bin/slt.sh
-```
-
-**Benefits:**
-*   **Controlled Test Pacing:** Prevents overwhelming target systems by introducing configurable pauses between test cycles.
-*   **Reduced System Load:** Spaces out test requests to simulate more realistic user behavior or to comply with system capacity limits.
-*   **Improved Stability:** Helps maintain the stability of the system under test during prolonged load testing by giving it time to recover between iterations.
-
-
-### Execution Flow
-
-**Phase 1: Initialization** (< 1 second)
-- Load configuration
-- Create output directory
-- Initialize tracking arrays
-- Validate required tools
-
-**Phase 2: Test Loop** (duration depends on ITERATIONS)
-- Sequential iteration through all scenarios
-- Each test: `timeout $AB_TIMEOUT ab -n $AB_REQUESTS -c $AB_CONCURRENCY $url`
-- Real-time console output every iteration
-- Progress indicators every 100 iterations
-
-**Phase 3: Analysis** (1-2 seconds)
-- Sort values for percentile calculations
-- Calculate statistics (mean, median, std dev)
-- Compute CV for stability assessment
-- Generate success/error rates
-
-**Phase 4: Reporting** (< 1 second)
-- Console summary with formatted tables
-- Markdown report with full metrics
-- Preserve all raw ApacheBench outputs
-
-### Output Structure
-
-```
-load_test_results_20250108_143022/
-├── summary_report.md              # Main report
-│
-├── console_output.log             # Real-time execution log
-├── execution.log                  # Detailed iteration log
-├── error.log                      # Error tracking
-│
-└── raw_Homepage_1.txt             # Raw ApacheBench outputs
-    raw_Homepage_2.txt
-    raw_API_Users_1.txt
-    ...
-```
-
-### Understanding SLT Reports
-
-**Sample Output:**
-
-```markdown
-##  Homepage
-
-**URL:** `http://localhost:8000/`
+## Homepage
+URL: http://localhost:8000/
 
 ### Performance Metrics
-
 | Metric | Value |
 |--------|-------|
 | **Average RPS** | **1,247.32 req/s** |
-| Median RPS | 1,251.18 req/s |
-| Standard Deviation | 89.45 req/s (CV: 7.18%) |
-| Min/Max RPS | 1,012.34 / 1,398.76 req/s |
-| P50 / P95 / P99 | 1,251 / 1,356 / 1,378 req/s |
-
-### Latency Analysis
-
-| Metric | Value |
-|--------|-------|
-| Avg Response Time | 8.02 ms |
-| Median Response Time | 7.98 ms |
-| P95 Latency | 11.23 ms |
-| P99 Latency | 14.56 ms |
-
-### Reliability
-
-| Metric | Value |
-|--------|-------|
 | Success Rate | 99.80% (998/1000) |
-| Error Rate | 0.20% (2 failures) |
+| P95 Latency | 11.23 ms |
 
 **Stability Assessment:** ==== Excellent (CV < 10%)
 ```
 
-**Interpretation:**
+### What This Means in Plain English
 
-1. **Average RPS (1,247.32)**: Your application handles ~1,250 requests/second
-2. **CV (7.18%)**: Excellent stability—performance is highly consistent
-3. **P95 Latency (11.23ms)**: 95% of requests complete within 11.23ms
-4. **P99 Latency (14.56ms)**: Even worst-case (99th percentile) is fast
-5. **Success Rate (99.80%)**: Nearly perfect reliability
+| Technical Term | What It Really Means | Good Range |
+|----------------|---------------------|------------|
+| **RPS (Requests Per Second)** | How many visitors can browse simultaneously | Higher is better |
+| **Success Rate** | Percentage of visitors who had a good experience | 95%+ is excellent |
+| **P95 Latency** | How long 95% of your pages take to load | Under 200ms is great |
+| **Stability** | How consistent your performance is | "Excellent" or "Good" |
 
-**Verdict:** ✅ Production-ready performance
+### Quick Decision Guide
 
-### When to Use SLT
+✅ **Your website is ready for visitors if:**
+- Success Rate: 95% or higher
+- P95 Latency: Under 200ms
+- Stability: "Excellent" or "Good"
 
-✅ **Development Phase:**
-- Quick smoke tests after code changes
-- Comparing optimization attempts
-- Validating bug fixes don't regress performance
+⚠️ **Consider improvements if:**
+- Success Rate: Below 95%
+- P95 Latency: Over 500ms
+- Stability: "Moderate" or "Poor"
 
-✅ **CI/CD Pipeline:**
-- Fast feedback (completes in minutes)
-- Fail builds on severe regressions
-- Track performance trends over commits
-
-✅ **Endpoint Comparison:**
-- Which implementation is faster? (A/B testing)
-- REST API vs GraphQL performance
-- CDN vs direct server response
-
-❌ **When NOT to Use SLT:**
-- Production baseline establishment (use DLT)
-- Statistical hypothesis testing (use DLT)
-- Memory leak detection (use DLT sustained phase)
-- Capacity planning (use DLT with ramp-up)
-
-### SLT Limitations
-
-1. **No baseline comparison**: Cannot detect gradual performance degradation
-2. **No statistical validation**: Results lack confidence intervals
-3. **No warm-up phase**: May include JIT compilation overhead
-4. **No system monitoring**: Doesn't track CPU/memory during tests
-
-For these capabilities, use **DLT**.
+❌ **Your website needs serious help if:**
+- Success Rate: Below 90%
+- P95 Latency: Over 1000ms (1 second)
+- Stability: "Poor"
 
 ---
 
-## DLT (Deep Load Testing) Deep Dive
+## SLT (Simple Load Testing) - For Everyday Testing
 
-### Overview
+### What is SLT?
 
-**File**: `bin/dlt.sh`  
-**Version**: 6.2  
-**Purpose**: Research-grade performance analysis with statistical rigor
+**SLT (Simple Load Testing)** is the easy, fast way to test your website's performance. It's perfect for:
 
-### Key Enhancements in v6.2
+- ✅ **Quick daily checks** - Is everything running smoothly?
+- ✅ **Before launching new features** - Will this slow down my site?
+- ✅ **After making changes** - Did my optimization work?
+- ✅ **Non-technical users** - No complex setup required
 
-✨ **Python-Powered Math Engine**: Consolidated backend for 40x speedup in analysis  
-✨ **Smart Locale Auto-Detection**: Automatically configures decimal separator  
-✨ **Hybrid Baseline Management**: Git-tracked for production, local-only for development  
-✨ **Automated Test Selection**: Welch's vs Mann-Whitney based on distribution tests  
-✨ **Advanced Effect Sizes**: Cohen's d and Rank-Biserial correlation  
-✨ **Automated Regression Detection**: Pass/fail verdicts based on statistics
+### How to Use SLT
 
-### Architecture
-
-```
-┌─────────────────────────────────────┐
-│   Environment Detection              │
-│   → Read APP_ENV from .env           │
-│   → Configure baseline strategy      │
-│   → Initialize directories           │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Phase 1: WARM-UP (50 iterations)   │
-│   → Low concurrency (AB_CONCURRENCY/4)│
-│   → Prime JIT compilers               │
-│   → Initialize connection pools       │
-│   → Warm caches                       │
-│   → Results DISCARDED                 │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Phase 2: RAMP-UP (100 iterations)  │
-│   → Gradually increase concurrency    │
-│   → Observe "Knee of the Curve"       │
-│   → Detect saturation point           │
-│   → Results INCLUDED in analysis      │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Phase 3: SUSTAINED (850 iterations)│
-│   → Full concurrency (AB_CONCURRENCY)│
-│   → Primary dataset collection        │
-│   → System resource monitoring        │
-│   → Results INCLUDED in analysis      │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Statistical Analysis               │
-│   → Calculate mean, median, std dev  │
-│   → Compute 95% confidence intervals │
-│   → Percentile analysis (P90-P99)    │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Hypothesis Testing & Stats        │
-│   → Load latest baseline             │
-│   → Call lib/stats.py (Python)       │
-│   → Welch's vs Mann-Whitney U        │
-│   → Cohen's d vs Rank-Biserial       │
-│   → Verdict: Improvement/Regression  │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Baseline Management                │
-│   → Save current test as baseline    │
-│   → Update metadata                  │
-│   → Git staging (production mode)    │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────┐
-│   Report Generation                  │
-│   → Research report (full analysis)  │
-│   → Hypothesis testing report        │
-│   → System metrics CSV               │
-└─────────────────────────────────────┘
-```
-
-### Configuration
-
-**Research-Based Parameters** (DO NOT change without understanding methodology):
+#### The Basic Test (Recommended for Most Users)
 
 ```bash
-WARMUP_ITERATIONS=50       # Prime application environment
-RAMPUP_ITERATIONS=100      # Observe saturation behavior
-SUSTAINED_ITERATIONS=850   # Primary dataset
-TOTAL_ITERATIONS=1000      # Total test duration
-
-AB_REQUESTS=1000           # Requests per iteration
-AB_CONCURRENCY=50          # Concurrent users
-THINK_TIME_MS=2000         # Delay between requests (realistic simulation)
-TEST_TIMEOUT=30            # Timeout per test
+# Just run this command
+./bin/slt.sh
 ```
 
-**Why these values?**
+**What happens:**
+- Tests your website with simulated visitors
+- Takes about 2-5 minutes to complete
+- Shows you results in plain English
+- Saves a detailed report for later
 
-- **1000 total iterations**: Statistical significance requires n > 30 per phase (Central Limit Theorem)
-- **50 warm-up**: Sufficient for JIT optimization and cache priming
-- **100 ramp-up**: Captures transition from cold → hot state
-- **850 sustained**: Large dataset for narrow confidence intervals
-- **Concurrency 50**: Simulates moderate production load
-- **Think time 2000ms**: Models realistic user behavior (Barford & Crovella, 1998)
+#### Understanding the Test Process
 
-### Environment Configuration
+1. **Warm-up** - The tool first visits your site a few times to wake it up
+2. **Main Test** - Simulates 1000 visitors browsing your site
+3. **Analysis** - Calculates how well your site performed
+4. **Results** - Shows you a simple summary
 
-**Production Mode** (Git-tracked baselines):
+#### Customizing Your Test (Optional)
+
+If you want to test different scenarios, you can adjust these settings:
 
 ```bash
-# .env file
-APP_ENV=production
-STATIC_PAGE=https://prod.example.com/
-DYNAMIC_PAGE=https://prod.example.com/api/users
-API_ENDPOINT=https://prod.example.com/api/v2/posts
+# Quick test (1 minute) - good for development
+ITERATIONS=100 ./bin/slt.sh
+
+# Heavy test (10 minutes) - good for pre-launch
+ITERATIONS=2000 ./bin/slt.sh
+
+# Test with more visitors at once
+AB_CONCURRENCY=20 ./bin/slt.sh
 ```
 
-- Baselines saved to: `./baselines/`
-- Git-tracked: Yes
-- Use for: Release validation, SLA monitoring, regression detection
+**Don't worry about these settings** - the default values work great for most websites.
 
-**Local Development Mode** (local-only baselines):
+### What SLT Tests
+
+By default, SLT tests three common scenarios:
+
+1. **Homepage** - Your main page (most visitors see this)
+2. **API Endpoint** - Dynamic content (like user data or posts)
+3. **Error Page** - What happens when something goes wrong
+
+You can customize these URLs in the script if needed, but the defaults work for most websites.
+
+
+### Reading Your SLT Results
+
+After the test finishes, you'll see a summary like this:
+
+```
+======================================================================
+ Test Summary - Performance Analysis Over 1000 Iterations
+======================================================================
+
+   Homepage
+   URL: http://localhost:8000/
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ==== Average RPS:          1,247.32 req/s (original metric)
+ ==== Median RPS:           1,251.18 req/s
+ ==== Std Deviation:        89.45 req/s (CV: 7.18%)
+ ==== Success Rate:         99.80% (998/1000 tests)
+ ==== P95 Latency:          11.23 ms
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Stability Assessment:** ==== Excellent (CV < 10%)
+```
+
+### What These Numbers Mean
+
+| Number | What It Tells You | Good/Bad |
+|--------|-------------------|----------|
+| **1,247.32 req/s** | Your site can handle ~1,250 visitors at once | Higher is better |
+| **99.80% success** | Almost every visitor had a good experience | 95%+ is excellent |
+| **11.23 ms P95** | 95% of pages load in under 11 milliseconds | Under 200ms is great |
+| **Excellent stability** | Your performance is consistent | Excellent/Good = ready |
+
+### Where to Find Your Results
+
+The test creates a folder with all the details:
+
+```
+load_test_results_20250108_143022/
+├── summary_report.md      # Easy-to-read main report
+├── console_output.log     # What you saw on screen
+└── raw_*.txt             # Technical details (for experts)
+```
+
+**Just open the `summary_report.md` file** - it has all the important information in a clean format.
+
+### When to Use SLT
+
+✅ **Perfect for:**
+- Daily health checks
+- Testing before deploying changes
+- Quick performance verification
+- Non-technical users
+- Getting fast feedback
+
+❌ **Not for:**
+- Scientific research (use DLT)
+- Production monitoring (use DLT)
+- Detailed statistical analysis (use DLT)
+
+---
+
+## DLT (Deep Load Testing) - For Serious Analysis
+
+### What is DLT?
+
+**DLT (Deep Load Testing)** is the advanced version for when you need detailed, scientific analysis. It's perfect for:
+
+- ✅ **Production environments** - Making sure your live site is performing well
+- ✅ **Before major releases** - Comprehensive testing for big changes
+- ✅ **Performance regression detection** - Catching problems early
+- ✅ **Statistical analysis** - When you need confidence in your results
+
+### How DLT is Different from SLT
+
+| Feature | SLT (Simple) | DLT (Deep) |
+|---------|-------------|------------|
+| **Time to run** | 2-5 minutes | 1.5-2.5 hours |
+| **Analysis depth** | Basic metrics | Statistical confidence |
+| **Baseline comparison** | No | Yes (compares to previous tests) |
+| **Statistical rigor** | Simple | Research-grade |
+| **Best for** | Quick checks | Production validation |
+
+### How to Use DLT
+
+#### Basic DLT Test
 
 ```bash
-# .env file
-APP_ENV=local
-STATIC_PAGE=http://localhost:8000/
-DYNAMIC_PAGE=http://localhost:8000/api/users
+# Run the deep analysis
+./bin/dlt.sh
 ```
 
-- Baselines saved to: `./.dlt_local/`
-- Git-tracked: No
-- Use for: Feature development, quick experiments
+**What happens:**
+- **Phase 1**: Warm-up (5 minutes) - Gets your site ready
+- **Phase 2**: Ramp-up (10 minutes) - Gradually increases load
+- **Phase 3**: Sustained (85 minutes) - Heavy load testing
+- **Analysis**: Statistical comparison with previous results
+- **Total time**: About 2 hours
 
-**Staging Mode**:
+#### Setting Up Your Environment
+
+DLT needs to know whether you're testing a local development site or a production site:
 
 ```bash
-APP_ENV=staging
+# For local development
+echo "APP_ENV=local" > .env
+echo "STATIC_PAGE=http://localhost:8000/" >> .env
+echo "DYNAMIC_PAGE=http://localhost:8000/api/posts" >> .env
+
+# For production testing
+echo "APP_ENV=production" > .env
+echo "STATIC_PAGE=https://your-site.com/" >> .env
+echo "DYNAMIC_PAGE=https://your-site.com/api/posts" >> .env
 ```
 
-- Baselines saved to: `./.dlt_local/`
-- Git-tracked: No
+### Understanding DLT Results
 
-### Execution Flow
+DLT gives you two reports:
 
-**Initialization** (5-10 seconds)
-1. Detect environment from `.env`
-2. Configure baseline directories
-3. Start background system monitoring (CPU, memory, disk I/O)
-4. Create report directory structure
-
-**Phase 1: Warm-Up** (~5-10 minutes)
-- 50 iterations at 25% concurrency (12-13 concurrent users)
-- Purpose: Stabilize application state
-- Results: **Discarded** (not included in final analysis)
-- Output: Real-time progress indicators
-
-**Phase 2: Ramp-Up** (~10-15 minutes)
-- 100 iterations with gradual concurrency increase (13 → 50 users)
-- Purpose: Observe system behavior under increasing load
-- Results: **Included** in statistical analysis
-- Identifies "Knee of the Curve" (saturation point)
-
-**Phase 3: Sustained Load** (~85-120 minutes)
-- 850 iterations at full concurrency (50 users)
-- Purpose: Collect primary performance dataset
-- Results: **Included** in statistical analysis
-- Simulates steady-state production load
-
-**Analysis & Reporting** (10-30 seconds)
-- Statistical calculations (mean, median, std dev, CI) via Python
-- Load baseline from `./baselines/` or `./.dlt_local/`
-- Automatic statistical test selection (Welch vs Mann-Whitney)
-- Effect size calculation (Cohen's d or Rank-Biserial)
-- Generate two reports: research + hypothesis testing
-
-**Total Duration**: ~100-150 minutes (1.5-2.5 hours)
-
-### Output Structure
+#### 1. Research Report
+Shows you detailed performance metrics with statistical confidence:
 
 ```
-load_test_reports_20250108_143022/
-├── research_report_20250108_143022.md       # Full statistical analysis
-├── hypothesis_testing_20250108_143022.md    # Baseline comparison
-│
-├── system_metrics.csv                       # CPU, memory, disk I/O
-├── error_log.txt                            # Error tracking
-├── execution.log                            # Phase-by-phase log
-│
-├── raw_data/                                # All ApacheBench outputs
-│   ├── Static_iter_warmup_1.txt
-│   ├── Static_iter_rampup_1.txt
-│   ├── Static_iter_sustained_1.txt
-│   └── ...
-│
-└── charts/                                  # Reserved for future visualizations
-```
-
-### Understanding DLT Reports
-
-#### Research Report Structure
-
-**1. Executive Summary**
-
-```markdown
 ### Static
+**URL**: https://your-site.com/
 
-**URL**: `https://prod.example.com/`
-
-| Metric | Mean | Median | Std Dev | P95 | P99 | 95% CI |
-|--------|------|--------|---------|-----|-----|--------|
-| RPS | 1847.32 | 1851.45 | 124.56 | - | - | [1839.12, 1855.52] |
+| Metric | Mean | 95% CI |
+|--------|------|--------|
+| RPS | 1847.32 | [1839.12, 1855.52] |
 ```
 
-**Interpretation:**
-- **Mean RPS**: Average throughput
-- **95% CI [1839.12, 1855.52]**: True mean lies in this range with 95% confidence
-- **Std Dev (124.56)**: Relatively stable if SD < 10% of mean
+**What this means:** We're 95% confident your true performance is between 1839-1855 requests per second.
 
-**2. Latency Breakdown**
+#### 2. Hypothesis Testing Report
+Compares your current test to previous results:
 
-```markdown
-| Phase | Connect (ms) | Processing (ms) | Total (ms) |
-|-------|--------------|-----------------|------------|
-| Mean | 2.34 | 24.12 | 26.46 |
-| P95 | 3.45 | 31.89 | 35.12 |
-| P99 | 4.12 | 38.23 | 42.18 |
 ```
-
-**Interpretation:**
-- **Connect time**: Network + TLS handshake
-- **Processing time**: Application logic + database
-- **If Connect > Processing**: Network bottleneck
-- **If Processing >> Connect**: Application/database bottleneck
-
-#### Hypothesis Testing Report Structure
-
-```markdown
 ### Dynamic
-
-**Baseline**: ./baselines/production_baseline_Dynamic_20250105.csv  
-**Baseline Mean RPS**: 1,247.32  
-**Current Mean RPS**: 1,356.78  
+**Baseline Mean RPS**: 1,247.32
+**Current Mean RPS**: 1,356.78
 **Change**: +8.78%
 
-#### Statistical Test Results
-
-| Metric | Value | Interpretation |
-|--------|-------|----------------|
-| **t-statistic** | 3.42 | - |
-| **p-value** | 0.001 | Statistically significant (p < 0.05) |
-| **Degrees of Freedom** | 148 | Welch-Satterthwaite |
-| **Cohen's d** | 0.62 | Effect size: medium |
-| **Verdict** | ✅ SIGNIFICANT IMPROVEMENT | - |
-
-#### Interpretation
-
-- **Very strong evidence** against H₀ (99.9% confidence)
-- Effect size is **medium** (Cohen's d = 0.62)
-- **Practical significance**: Change is both statistically and practically significant
+**Verdict**: ✅ SIGNIFICANT IMPROVEMENT
 ```
 
-**Decision Matrix:**
+**What this means:** Your changes made the site statistically faster, and this improvement is real (not just random chance).
 
-| p-value | Cohen's d | Interpretation | Action |
-|---------|-----------|----------------|--------|
-| < 0.05 | > 0.8 | Large improvement | ✅ Merge immediately |
-| < 0.05 | 0.5-0.8 | Medium improvement | ✅ Merge with confidence |
-| < 0.05 | 0.2-0.5 | Small improvement | ⚠️ Document, consider merge |
-| < 0.05 | < 0.2 | Negligible change | ⚠️ Not practically important |
-| ≥ 0.05 | Any | Not significant | ❌ No evidence of change |
+### When to Use DLT
 
-### Baseline Management
+✅ **Perfect for:**
+- Production performance monitoring
+- Pre-release validation
+- Detecting performance regressions
+- Scientific performance analysis
+- When you need confidence in results
 
-**Baseline File Structure:**
+❌ **Not for:**
+- Quick daily checks (use SLT)
+- Development testing (use SLT)
+- When you need fast results (use SLT)
 
-```csv
-iteration,rps,response_time_ms,p95_ms,p99_ms,connect_ms,processing_ms
-1,1247.32,8.02,11.23,14.56,2.34,5.68
-2,1251.18,7.98,11.18,14.12,2.31,5.67
-3,1245.67,8.05,11.45,14.89,2.36,5.69
-...
+---
+
+## Common Testing Scenarios
+
+### Scenario 1: Daily Health Check
+
+**Goal:** Make sure your website is running normally
+
+**Tool:** SLT (Simple Load Testing)
+
+**How:**
+```bash
+./bin/slt.sh
 ```
 
-**Baseline Lifecycle:**
+**What to look for:**
+- Success rate above 95%
+- No major changes from yesterday
+- Stability "Excellent" or "Good"
 
-1. **First Run** (no baseline exists):
-   ```
-   Status: No baseline found - this test will be saved as baseline
-   ```
-   - Current test becomes the baseline
-   - Future tests compare against this
+### Scenario 2: Before Deploying New Features
 
-2. **Subsequent Runs** (baseline exists):
-   ```
-   Baseline: ./baselines/production_baseline_Dynamic_20250105.csv
-   Verdict: ✅ SIGNIFICANT IMPROVEMENT (+8.78%)
-   ```
-   - Welch's t-test compares current vs baseline
-   - Effect size quantifies practical importance
+**Goal:** Ensure your changes won't slow down the site
 
-3. **Updating Baselines**:
-   ```bash
-   # Method 1: Delete old baseline (forces new baseline creation)
-   rm baselines/production_baseline_Dynamic_*.csv
-   bin/dlt.sh
-   
-   # Method 2: Rename current test as baseline
-   cp load_test_reports_*/raw_data/* baselines/
-   ```
+**Tool:** SLT (Simple Load Testing)
 
-**Best Practice:** Establish new baselines after major releases:
+**How:**
+```bash
+# Test before changes
+./bin/slt.sh
+# Save the results
+
+# Make your changes
+# ... deploy your new feature ...
+
+# Test after changes
+./bin/slt.sh
+# Compare the results
+```
+
+**What to look for:**
+- Performance should be similar or better
+- Success rate should stay high
+- If performance drops significantly, investigate why
+
+### Scenario 3: Production Release Validation
+
+**Goal:** Comprehensive testing before going live
+
+**Tool:** DLT (Deep Load Testing)
+
+**How:**
+```bash
+# Set up for production testing
+echo "APP_ENV=production" > .env
+echo "STATIC_PAGE=https://your-site.com/" >> .env
+echo "DYNAMIC_PAGE=https://your-site.com/api/posts" >> .env
+
+# Run comprehensive test
+./bin/dlt.sh
+```
+
+**What to look for:**
+- "No significant change" or "SIGNIFICANT IMPROVEMENT"
+- Avoid "SIGNIFICANT REGRESSION"
+- High success rates (95%+)
+
+### Scenario 4: Performance Problem Investigation
+
+**Goal:** Find out why your site is slow
+
+**Tool:** Start with SLT, then use DLT if needed
+
+**How:**
+```bash
+# Quick check with SLT
+./bin/slt.sh
+
+# If you see problems, run DLT for detailed analysis
+./bin/dlt.sh
+```
+
+**What to look for:**
+- Low success rates (below 95%)
+- High response times (P95 over 500ms)
+- Poor stability ratings
+
+---
+
+## When to Use Each Tool
+
+### Quick Decision Guide
+
+| Situation | Use | Time | Why |
+|-----------|-----|------|-----|
+| **Daily check** | SLT | 2-5 min | Fast, simple, good enough |
+| **Before deployment** | SLT | 2-5 min | Quick feedback on changes |
+| **Production release** | DLT | 2 hours | Comprehensive, statistical confidence |
+| **Performance investigation** | SLT → DLT | 2-5 min → 2 hours | Start quick, go deep if needed |
+| **Non-technical user** | SLT | 2-5 min | Simple, easy to understand |
+| **DevOps team** | DLT | 2 hours | Detailed analysis for production |
+
+### Tool Comparison Summary
+
+| Feature | SLT (Simple) | DLT (Deep) |
+|---------|-------------|------------|
+| **Best for** | Quick checks | Production validation |
+| **Time required** | 2-5 minutes | 1.5-2.5 hours |
+| **Technical skill** | Low | Medium |
+| **Statistical rigor** | Basic | Research-grade |
+| **Baseline comparison** | No | Yes |
+| **Confidence level** | Good | Very high |
+| **Setup complexity** | Very simple | Simple |
+
+### Pro Tips
+
+✅ **Start with SLT** - It's fast and gives you 80% of the value in 20% of the time
+
+✅ **Use DLT for production** - When it really matters, take the time for comprehensive testing
+
+✅ **Keep a log** - Save your test results to track performance over time
+
+✅ **Test regularly** - Performance problems are easier to fix when you catch them early
+
+---
+
+## Troubleshooting Common Problems
+
+### Problem 1: "ab: command not found"
+
+**What it means:** ApacheBench (the testing tool) isn't installed
+
+**Solution:**
+```bash
+# Ubuntu/Debian
+sudo apt-get install apache2-utils
+
+# CentOS/RHEL
+sudo yum install httpd-tools
+
+# macOS
+brew install apache2
+```
+
+### Problem 2: Test takes too long or times out
+
+**What it means:** Your website is responding too slowly
+
+**Solutions:**
+```bash
+# Quick fix - increase timeout
+AB_TIMEOUT=60 ./bin/slt.sh
+
+# Better fix - check why your site is slow
+curl -w "Time: %{time_total}s\n" -o /dev/null -s http://localhost:8000/
+```
+
+### Problem 3: Low success rate (below 95%)
+
+**What it means:** Many visitors are getting errors
+
+**Common causes:**
+- Website is overloaded
+- Database connection problems
+- Server running out of memory
+- Network issues
+
+**How to investigate:**
+```bash
+# Check if your site is working at all
+curl -I http://localhost:8000/
+
+# Check server resources
+top
+free -h
+```
+
+### Problem 4: "Too many open files" error
+
+**What it means:** Your system can't handle enough simultaneous connections
+
+**Solution:**
+```bash
+# Temporary fix
+ulimit -n 10000
+./bin/slt.sh
+
+# Permanent fix (requires restart)
+sudo nano /etc/security/limits.conf
+# Add: * soft nofile 65536
+# Add: * hard nofile 65536
+```
+
+### Problem 5: Results are inconsistent
+
+**What it means:** Running the same test gives different results
+
+**Common causes:**
+- Other programs using the server
+- Network congestion
+- Database cache warming up
+- Background tasks running
+
+**Solutions:**
+```bash
+# Run test multiple times, take the average
+./bin/slt.sh
+sleep 60
+./bin/slt.sh
+sleep 60
+./bin/slt.sh
+
+# Or use DLT for more consistent results
+./bin/dlt.sh
+```
+
+---
+
+## Advanced Options (Optional)
+
+### Customizing Test URLs
+
+Edit the `SCENARIOS` section in `bin/slt.sh`:
 
 ```bash
-# After release v2.0
-git tag v2.0.0
-bin/dlt.sh
-git add baselines/
-git commit -m "chore: baseline for v2.0.0"
-git push --tags
+declare -A SCENARIOS=(
+    ["Homepage"]="http://localhost:8000/"
+    ["API_Endpoint"]="http://localhost:8000/api/posts"
+    ["User_Profile"]="http://localhost:8000/user/123"
+)
 ```
 
-### Statistical Methodology
+### Adjusting Test Intensity
 
-#### Welch's t-test (Welch, 1947)
+```bash
+# Light testing (good for development)
+ITERATIONS=100 AB_CONCURRENCY=5 ./bin/slt.sh
 
-**Purpose**: Compare two groups with potentially unequal variances
+# Heavy testing (good for production validation)
+ITERATIONS=2000 AB_CONCURRENCY=50 ./bin/slt.sh
 
-**Formula**:
-```
-t = (mean₁ - mean₂) / √(s₁²/n₁ + s₂²/n₂)
-
-Where:
-- mean₁, mean₂: Sample means
-- s₁², s₂²: Sample variances
-- n₁, n₂: Sample sizes
+# Stress testing (find your limits)
+ITERATIONS=5000 AB_CONCURRENCY=100 ./bin/slt.sh
 ```
 
-**Degrees of Freedom (Welch-Satterthwaite)**:
-```
-df = (s₁²/n₁ + s₂²/n₂)² / ((s₁²/n₁)²/(n₁-1) + (s₂²/n₂)²/(n₂-1))
-```
+### Testing with Authentication
 
-**p-value Interpretation**:
-- p < 0.01: Very strong evidence against H₀ (99% confidence)
-- p < 0.05: Strong evidence against H₀ (95% confidence)
-- p ≥ 0.05: Insufficient evidence to reject H₀
+If your site requires login, you can add authentication:
 
-#### Cohen's d (Cohen, 1988)
+```bash
+# Bearer token (APIs)
+timeout $AB_TIMEOUT ab -H "Authorization: Bearer YOUR_TOKEN" \
+  -n $AB_REQUESTS -c $AB_CONCURRENCY "$url"
 
-**Purpose**: Quantify practical significance (effect size)
-
-**Formula**:
-```
-d = (mean₁ - mean₂) / pooled_SD
-
-pooled_SD = √(((n₁-1)s₁² + (n₂-1)s₂²) / (n₁ + n₂ - 2))
+# Cookie-based (websites)
+timeout $AB_TIMEOUT ab -C "session_id=YOUR_SESSION" \
+  -n $AB_REQUESTS -c $AB_CONCURRENCY "$url"
 ```
 
-**Interpretation**:
-- |d| < 0.2: Negligible
-- |d| ≈ 0.5: Medium
-- |d| > 0.8: Large
+### Testing POST Requests
 
-**Why Both Metrics Matter**:
+```bash
+# Create a file with POST data
+echo '{"name":"test","email":"test@example.com"}' > postdata.json
 
-| Scenario | p-value | Cohen's d | Interpretation |
-|----------|---------|-----------|----------------|
-| A | 0.001 | 0.05 | Statistically significant but meaningless change |
-| B | 0.08 | 0.75 | Not statistically significant but likely important |
-| C | 0.001 | 0.85 | Both statistically and practically significant ✅ |
+# Test with POST data
+timeout $AB_TIMEOUT ab -p postdata.json -T "application/json" \
+  -n $AB_REQUESTS -c $AB_CONCURRENCY "$url"
+```
 
-**Best Practice**: Always consider **both** p-value and effect size before making decisions.
+### Running Tests in Background
+
+```bash
+# Start test and let it run while you do other things
+nohup ./bin/dlt.sh > test_$(date +%Y%m%d_%H%M%S).log 2>&1 &
+
+# Check progress
+tail -f test_*.log
+```
+
+---
+
+**That's it! You now have everything you need to test your website's performance.**
+
+**Remember:** Start with SLT for quick checks, use DLT when you need detailed analysis, and test regularly to catch problems early.
 
 ---
 
