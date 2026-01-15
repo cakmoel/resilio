@@ -19,6 +19,12 @@ Resilio v6.2 implements methodologies from:
 - **Kerby, D. S. (2014)** - Rank-biserial correlation for effect size
 - **Ruxton, G. D. (2006)** - The unequal variance t-test is an underused alternative to Student's t-test and the Mann–Whitney U test
 
+### Modern Site Reliability Standards
+
+**Beyer, B., Jones, C., Petoff, J., & Murphy, N. R. (Eds.).** (2016). *Site Reliability Engineering: How Google Runs Production Systems*. O'Reilly Media.
+
+**Key implementation**: Formalization of Service Level Objectives (SLOs), Error Budgets, and the use of Tail Latency percentiles (P95/P99) for reliability measurement.
+
 **Menascé, D. A., Almeida, V. A. F., & Dowdy, L. W.** (1994). *Capacity Planning and Performance Modeling: From Mainframes to Client-Server Systems*. Prentice Hall PTR.
 - Chapter 7: Workload Characterization Techniques
 - Multi-Phase Testing Methodology
@@ -188,6 +194,7 @@ This document follows a hybrid citation format combining elements of APA 7th Edi
 
 ## Version History
 
+- **v6.2** (January 2025): Added Site Reliability Engineering standards for SLOs and tail latency measurement
 - **v6.1** (January 2025): Added Mann-Whitney U test, automatic test selection, normality checking, rank-biserial correlation
 - **v6.0** (January 2025): Added Welch's t-test, Cohen's d, hybrid baseline management, smart locale detection
 - **v5.1** (December 2024): Original research-based implementation with 95% confidence intervals
