@@ -49,8 +49,10 @@ Resilio v6.2 implements methodologies from:
 - Think Time Modeling for Realistic User Simulation
 
 **Hamilton, J. D.** (2007). On Designing and Deploying Internet-Scale Services. *Proceedings of the 21st Large Installation System Administration Conference (LISA '07)*, 231–242.
-- Percentile-Based Service Level Objectives (P95, P99)
-- Error Budgeting Methodology for Production Systems
+- Operations-Friendly Service Design Principles
+- Automation and Provisioning Methodology
+- Dependency Management and Failure Isolation
+- Hardware Standardization and Abstraction
 
 ---
 
