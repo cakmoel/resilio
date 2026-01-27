@@ -48,10 +48,10 @@ if [[ -f "${BASE_DIR}/lib/workload.sh" ]]; then
     source "${BASE_DIR}/lib/workload.sh"
 else
     # Fallback to local placeholders if config is missing
-    # Base URL constants - change here to update all test targets
-    BASE_URL_DYNAMIC="http://localhost:8000"
-    BASE_URL_STATIC="http://localhost:8000"
-    BASE_URL_ERROR="http://localhost:8000"
+    # Base URL constants - updated for specified test scenarios
+    BASE_URL_DYNAMIC="https://myblog.local/post/3/visiting-bali-a-journey-of-serenity-and-culture"
+    BASE_URL_STATIC="https://myblog.local/login"
+    BASE_URL_ERROR="https://myblog.local/this-is-not-real-page"
 
     # URL path patterns
     DYNAMIC_PATH="/api/posts"
@@ -86,37 +86,96 @@ run_ab_test() {
     local iteration=$3
     local temp_file="${OUTPUT_DIR}/raw_${scenario}_${iteration}.txt"
     
-    # Run 'ab' with timeout and capture full output
-    if timeout "$AB_TIMEOUT" ab -n "$AB_REQUESTS" -c "$AB_CONCURRENCY" "$url" > "$temp_file" 2>&1; then
-        # Check if 'ab' returned a valid requests per second value
-        if grep -q "Requests per second:" "$temp_file"; then
-            local rps time_per_req failed p50 p95 p99
-            rps=$(grep "Requests per second:" "$temp_file" | awk '{print $4}')
-            
-            # Extract additional metrics (non-breaking addition)
-            time_per_req=$(grep "Time per request:" "$temp_file" | head -1 | awk '{print $4}' || echo "0")
-            failed=$(grep "Failed requests:" "$temp_file" | awk '{print $3}' || echo "0")
-            
-            # Extract percentiles if available
-            p50=$(grep -A 10 "Percentage" "$temp_file" | grep "50%" | awk '{print $2}' || echo "0")
-            p95=$(grep -A 10 "Percentage" "$temp_file" | grep "95%" | awk '{print $2}' || echo "0")
-            p99=$(grep -A 10 "Percentage" "$temp_file" | grep "99%" | awk '{print $2}' || echo "0")
-            
-            log_to_file "SUCCESS: $scenario iteration $iteration - RPS: $rps, P95: ${p95}ms"
-            
-            # Return metrics in parseable format
-            echo "SUCCESS|$rps|$time_per_req|$failed|$p50|$p95|$p99"
-            return 0
+    # System memory before test
+    local system_memory_before
+    system_memory_before=$(free -m | awk 'NR==2{print $3}')
+    
+    # Initialize memory variables
+    local start_rss end_rss peak_rss vms_size
+    start_rss=0
+    end_rss=0
+    peak_rss=0
+    vms_size=0
+    
+    # Run ApacheBench test with memory monitoring if enabled
+    if [[ "${MEMORY_MONITORING:-true}" == "true" ]]; then
+        # Start ApacheBench in background to track PID
+        timeout "$AB_TIMEOUT" ab -n "$AB_REQUESTS" -c "$AB_CONCURRENCY" "$url" > "$temp_file" 2>&1 &
+        local ab_pid=$!
+        export AB_PID="$ab_pid"
+        
+        # Get initial memory
+        start_rss=$(ps -p "$ab_pid" -o rss --no-headers 2>/dev/null | awk '{print $1}' || echo "0")
+        peak_rss=$start_rss
+        
+        # Monitor memory during test (non-blocking)
+        while kill -0 "$ab_pid" 2>/dev/null; do
+            local current_rss
+            current_rss=$(ps -p "$ab_pid" -o rss --no-headers 2>/dev/null | awk '{print $1}' || echo "0")
+            if [[ $current_rss -gt $peak_rss ]]; then
+                peak_rss=$current_rss
+            fi
+            sleep 1
+        done &
+        local monitor_pid=$!
+        
+        wait "$ab_pid" 2>/dev/null
+        kill "$monitor_pid" 2>/dev/null
+        end_rss=$(ps -p "$ab_pid" -o rss --no-headers 2>/dev/null | awk '{print $1}' || echo "0")
+        
+        # Get VMS size
+        vms_size=$(ps -p "$ab_pid" -o vsize --no-headers 2>/dev/null | awk '{print $1}' || echo "0")
+    else
+        # Original behavior without memory monitoring
+        if timeout "$AB_TIMEOUT" ab -n "$AB_REQUESTS" -c "$AB_CONCURRENCY" "$url" > "$temp_file" 2>&1; then
+            ab_pid=""
+            start_rss=0
+            end_rss=0
+            peak_rss=0
+            vms_size=0
         else
-            log_error "No RPS data found for $scenario iteration $iteration"
-            echo "FAILED|0|0|0|0|0|0"
+            log_error "Test timeout or execution failed for $scenario iteration $iteration"
+            echo "FAILED|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0"
             return 1
         fi
+    fi
+    
+    # System memory after test
+    local system_memory_after
+    system_memory_after=$(free -m | awk 'NR==2{print $3}')
+    
+    # Check if 'ab' returned a valid requests per second value
+    if grep -q "Requests per second:" "$temp_file"; then
+        local rps time_per_req failed p50 p95 p99
+        rps=$(grep "Requests per second:" "$temp_file" | awk '{print $4}')
+        
+        # Extract additional metrics
+        time_per_req=$(grep "Time per request:" "$temp_file" | head -1 | awk '{print $4}' || echo "0")
+        failed=$(grep "Failed requests:" "$temp_file" | awk '{print $3}' || echo "0")
+        
+        # Extract percentiles
+        p50=$(grep -A 10 "Percentage" "$temp_file" | grep "50%" | awk '{print $2}' || echo "0")
+        p95=$(grep -A 10 "Percentage" "$temp_file" | grep "95%" | awk '{print $2}' || echo "0")
+        p99=$(grep -A 10 "Percentage" "$temp_file" | grep "99%" | awk '{print $2}' || echo "0")
+        
+        log_to_file "SUCCESS: $scenario iteration $iteration - RPS: $rps, P95: ${p95}ms"
+        
+        # Calculate RPS per MB efficiency and return extended metrics
+        local rps_per_mb=0
+        if [[ $system_memory_after -gt 0 ]]; then
+            rps_per_mb=$(echo "scale=3; $rps / ($system_memory_after / 1024)" | bc -l)
+        fi
+        
+        # Return extended metrics with memory data
+        echo "SUCCESS|$rps|$time_per_req|$failed|$p50|$p95|$p99|$system_memory_before|$system_memory_after|$start_rss|$end_rss|$peak_rss|$vms_size"
+        return 0
     else
-        log_error "Test timeout or execution failed for $scenario iteration $iteration"
-        echo "FAILED|0|0|0|0|0|0"
+        log_error "No RPS data found for $scenario iteration $iteration"
+        echo "FAILED|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0"
         return 1
     fi
+    
+    unset AB_PID
 }
 
 # --- Statistical Calculation Functions ---
@@ -205,11 +264,21 @@ main() {
     declare -A P95_VALUES
     declare -A P99_VALUES
     
+    # Initialize memory monitoring arrays
+    declare -A MEMORY_USED_VALUES    # System memory usage during tests
+    declare -A MEMORY_RSS_VALUES     # ApacheBench RSS memory
+    declare -A MEMORY_VMS_VALUES     # ApacheBench VMS memory
+    declare -A RPS_PER_MB_VALUES     # Efficiency metric: RPS per MB of memory
+    
     for name in "${!SCENARIOS[@]}"; do
         RPS_VALUES[$name]=""
         RESPONSE_TIME_VALUES[$name]=""
         P95_VALUES[$name]=""
         P99_VALUES[$name]=""
+        MEMORY_USED_VALUES[$name]=""
+        MEMORY_RSS_VALUES[$name]=""
+        MEMORY_VMS_VALUES[$name]=""
+        RPS_PER_MB_VALUES[$name]=""
         ERROR_COUNTS[$name]=0
         SUCCESS_COUNTS[$name]=0
     done
@@ -228,7 +297,13 @@ main() {
             # Run the test and parse results
             result=$(run_ab_test "$url" "$name" "$i")
             
-            IFS='|' read -r status rps time_req failed p50 p95 p99 <<< "$result"
+            # Parse extended result format with memory data
+            if echo "$result" | grep -q "|.*|.*|"; then
+                IFS='|' read -r status rps time_req failed p50 p95 p99 sys_before sys_after rss_start rss_end rss_peak vms_size <<< "$result"
+            else
+                IFS='|' read -r status rps time_req failed p50 p95 p99 <<< "$result"
+                sys_before="" sys_after="" rss_start="" rss_end="" rss_peak="" vms_size=""
+            fi
             
             if [ "$status" = "SUCCESS" ]; then
                 # Store successful results (preserves original logic)
@@ -236,10 +311,23 @@ main() {
                 RESPONSE_TIME_VALUES[$name]+="$time_req "
                 P95_VALUES[$name]+="$p95 "
                 P99_VALUES[$name]+="$p99 "
+                
+                # Store memory data
+                MEMORY_USED_VALUES[$name]+="$sys_after "
+                MEMORY_RSS_VALUES[$name]+="$rss_peak "
+                MEMORY_VMS_VALUES[$name]+="$vms_size "
+                
+                # Calculate and store RPS per MB efficiency
+                local rps_per_mb=0
+                if [[ $sys_after -gt 0 ]]; then
+                    rps_per_mb=$(echo "scale=3; $rps / $sys_after" | bc -l)
+                fi
+                RPS_PER_MB_VALUES[$name]+="$rps_per_mb "
+                
                 SUCCESS_COUNTS[$name]=$((SUCCESS_COUNTS[$name] + 1))
                 
-                printf " %-20s: %7.2f req/s (Response: %6.1fms, P95: %6.1fms)\n" \
-                    "$name" "$rps" "$time_req" "$p95"
+                printf " %-20s: %7.2f req/s (Response: %6.1fms, P95: %6.1fms, Memory: %.1fMB)\n" \
+                    "$name" "$rps" "$time_req" "$p95" "$(echo "scale=1; $sys_after / 1024" | bc -l)"
             else
                 # Track errors separately (NEW: no longer adds 0 to averages)
                 ERROR_COUNTS[$name]=$((ERROR_COUNTS[$name] + 1))
