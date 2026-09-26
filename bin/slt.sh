@@ -175,7 +175,6 @@ run_ab_test() {
         return 1
     fi
     
-    unset AB_PID
 }
 
 # --- Statistical Calculation Functions ---
@@ -299,10 +298,11 @@ main() {
             
             # Parse extended result format with memory data
             if echo "$result" | grep -q "|.*|.*|"; then
+                # shellcheck disable=SC2034
                 IFS='|' read -r status rps time_req failed p50 p95 p99 sys_before sys_after rss_start rss_end rss_peak vms_size <<< "$result"
             else
                 IFS='|' read -r status rps time_req failed p50 p95 p99 <<< "$result"
-                sys_before="" sys_after="" rss_start="" rss_end="" rss_peak="" vms_size=""
+                sys_after="" rss_peak="" vms_size=""
             fi
             
             if [ "$status" = "SUCCESS" ]; then
