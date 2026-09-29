@@ -2,10 +2,10 @@
 
 **High-Performance Load Testing Suite for Web Durability and Speed**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 [![Version](https://img.shields.io/badge/version-6.3.0-green.svg)](CHANGELOG.md)
 [![SLT Engine](https://img.shields.io/badge/SLT-v2.2-blue.svg)](bin/slt.sh)
-![CI](https://github.com/cakmoel/resilio/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/cakmoel/resilio/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/cakmoel/resilio/actions/workflows/ci.yml)
 
 
 ---
@@ -63,7 +63,7 @@ This will introduce a 5-second pause after all scenarios within a single iterati
 
 ## Core Engines
 
-### Resilio SLT (Simple Load Testing) - `bin/slt.sh` v2.3 (Suite v6.3)
+### Resilio SLT (Simple Load Testing) - `bin/slt.sh` v2.2 (Suite v6.3)
 
 The **SLT engine** is optimized for agile development cycles and rapid feedback. Perfect for:
 

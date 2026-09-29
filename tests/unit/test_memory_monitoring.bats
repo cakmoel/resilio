@@ -15,19 +15,22 @@ setup() {
   [ "$MEMORY_THRESHOLD_WARNING" = "80" ]
 }
 
-@test "slth.sh memory monitoring output format contains 12 pipe-delimited fields" {
+@test "slt.sh memory monitoring output format contains 13 pipe-delimited fields" {
   run bash -c '
-    # Simulate the extended result format from run_ab_test
+    set -e
+    # Simulate the extended result format from run_ab_test in bin/slt.sh:
+    # SUCCESS|rps|time_per_req|failed|p50|p95|p99|mem_before|mem_after|start_rss|end_rss|peak_rss|vms_size (13 fields)
     result="SUCCESS|100|50|0|10|20|30|512|1024|0|0|50|1234"
-    fields=$(echo "$result" | tr "|" "\n" | wc -l)
-    [ "$fields" -eq 12 ]
+    fields=$(echo "$result" | awk -F"|" "{print NF}")
+    [ "$fields" -eq 13 ]
     echo "$result" | grep -q "SUCCESS"
   '
   [ "$status" -eq 0 ]
 }
 
-@test "slth.sh system memory values are valid MB amounts" {
+@test "slt.sh system memory values are valid MB amounts" {
   run bash -c '
+    set -e
     system_memory_before=$(free -m | awk "NR==2{print \$3}")
     system_memory_after=$(free -m | awk "NR==2{print \$3}")
     [ "$system_memory_before" -gt 0 ]
@@ -37,8 +40,9 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
-@test "slth.sh RPS per MB efficiency calculation produces valid number" {
+@test "slt.sh RPS per MB efficiency calculation produces valid number" {
   run bash -c '
+    set -e
     rps=100
     sys_after=1024
     rps_per_mb=$(echo "scale=3; $rps / ($sys_after / 1024)" | bc -l)
